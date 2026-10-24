@@ -1,0 +1,10 @@
+name: Feature request
+description: Describe a concrete project integration need.
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: Project need and expected behavior
+      description: Describe the problem, a representative input and how success can be checked.
+    validations:
+      required: true

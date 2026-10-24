@@ -1,0 +1,10 @@
+Agent Entry CLI
+Copyright (c) 2026 Alan Hsu
+
+The Conversation/context-summary mechanics were adapted from Agent Eval Harness,
+Copyright (c) 2026 Alan Hsu, under the MIT license. Original creation headers are
+retained in conversation.py. This distribution does not depend on or bundle the
+evaluation framework, its Core, datasets, credentials or business artifacts.
+
+Third-party dependencies are installed separately under their respective licenses.
+See docs/third-party.md. No Pi, DeepSeek Harness or Codex implementation is vendored.

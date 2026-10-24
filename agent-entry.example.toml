@@ -1,0 +1,11 @@
+# Copy to your project's agent-entry.toml, then choose the actual provider/model.
+model = "replace-with-your-model"
+api = "chat_completions" # or responses
+api_key_env = "OPENAI_API_KEY"
+context_window = 65536 # application configuration, not inferred model capacity
+output_reserve = 4096
+system_reserve = 8192
+max_model_calls = 12
+timeout_seconds = 120
+cleanup_seconds = 5
+# max_session_tokens = 100000

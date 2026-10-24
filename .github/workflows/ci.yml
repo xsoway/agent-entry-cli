@@ -1,0 +1,30 @@
+name: CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --locked --extra dev
+      - run: uv run --locked --extra dev pytest -q
+      - run: uv run --locked --extra dev ruff check .
+      - run: uv run --locked --extra dev ruff format --check .
+      - run: uv run --locked --extra dev pyright
+      - run: uv build
+      - run: uv run --locked --extra dev python scripts/verify_distribution.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: distributions-${{ matrix.os }}
+          path: dist/*

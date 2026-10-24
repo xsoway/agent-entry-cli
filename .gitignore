@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.pyright/
+.code-review-graph/
+.agent-entry/
+.env
+.env.*
+!.env.example
+dist/
+build/
+.DS_Store

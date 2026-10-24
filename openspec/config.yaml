@@ -1,0 +1,4 @@
+schema: spec-driven
+context: |
+  Independent Python main-agent CLI. No dependency on any evaluation framework.
+  Keep project integration explicit; preserve privacy, authorization and cancellation.
