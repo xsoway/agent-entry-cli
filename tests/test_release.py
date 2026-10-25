@@ -121,3 +121,12 @@ def test_reachable_messages_cannot_publish_credentials(tmp_path, kind):
     assert result.returncode == 1
     assert "credential" in result.stdout and f"history:{kind}:" in result.stdout
     assert secret not in result.stdout + result.stderr
+
+
+def test_official_dependency_bot_identity_and_signoff_are_public(tmp_path):
+    email = "49699333+dependabot[bot]" + "@" + "users.noreply.github.com"
+    root = repository(tmp_path, email)
+    signoff = "Signed-off-by: dependabot[bot] <" + "support" + "@" + "github.com>"
+    git(root, "commit", "--allow-empty", "-m", "dependency update\n\n" + signoff)
+    result = check(root)
+    assert result.returncode == 0, result.stdout + result.stderr

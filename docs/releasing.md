@@ -45,6 +45,8 @@ uv run --locked --extra dev python scripts/verify_distribution.py
 uv run --locked python scripts/check_release.py
 ```
 
+分发检查默认允许从公开包索引获取解析元数据与依赖，以支持全新 CI 缓存；只有缓存完整时才使用 `scripts/verify_distribution.py --offline`。
+
 `check_release.py` 要求完整、干净的提交，检查未忽略工作文件、可达历史 blob、commit/tag 消息与提交邮箱。Git 邮箱应使用准备公开的 GitHub noreply 地址；官方合成提交的 noreply 地址也允许。混合编码文件中的 ASCII 凭据仍会被检查。脚本发现问题只报告规则和位置，不打印匹配原文；即使历史中的凭据已从最新版本删除，也会失败。
 
 该脚本只覆盖常见模式，不是全面 DLP 或依赖漏洞审计。分发归档需另做内容检查。检查不包含本地 reflog、不可达对象或未提供附件，分享源代码请使用干净 clone／源码包，勿直接复制 `.git` 目录。

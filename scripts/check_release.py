@@ -24,7 +24,9 @@ RULES = {
     "local_path": re.compile(r"/(?:Users|home)/[^\s/\"'<>]+"),
     "email": re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"),
 }
-PUBLIC_EMAIL = re.compile(r"(?:[A-Za-z0-9_+.-]+@users\.noreply\.github\.com|noreply@github\.com)")
+PUBLIC_EMAIL = re.compile(
+    r"(?:[A-Za-z0-9_+.\[\]-]+@users\.noreply\.github\.com|(?:noreply|support)@github\.com)"
+)
 
 
 def git(root: Path, *args: str) -> bytes:

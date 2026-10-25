@@ -5,6 +5,7 @@
 # @Author   : Alan_Hsu
 """Install the built wheel into an independent uv project and run outside the checkout."""
 
+import argparse
 import json
 import os
 import shutil
@@ -14,6 +15,10 @@ from pathlib import Path
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--offline", action="store_true", help="Require a complete uv cache")
+    settings = parser.parse_args()
+    network_flags = ("--offline",) if settings.offline else ()
     repository = Path(__file__).resolve().parents[1]
     wheels = list((repository / "dist").glob("*.whl"))
     if len(wheels) != 1:
@@ -36,8 +41,8 @@ def main() -> None:
                 args, cwd=root, env=env, text=True, capture_output=True, timeout=180, check=True
             )
 
-        run("uv", "lock", "--offline")
-        run("uv", "sync", "--locked", "--offline")
+        run("uv", "lock", *network_flags)
+        run("uv", "sync", "--locked", *network_flags)
         result = run("uv", "run", "--locked", "agent-entry", "--version")
         assert "agent-entry-cli 0.1.0" in result.stdout
         run("uv", "run", "--locked", "agent-entry", "--init")
