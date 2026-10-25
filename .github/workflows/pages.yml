@@ -28,7 +28,7 @@ jobs:
       - name: Prepare static files
         run: |
           mkdir -p _site
-          git archive HEAD index.html README.md README.zh-CN.md LICENSE NOTICE RELEASE_CHECKLIST.md SECURITY.md CONTRIBUTING.md CODE_OF_CONDUCT.md CHANGELOG.md agent-entry.example.toml docs examples openspec/changes/release-readiness-site/review.md | tar -x -C _site
+          git archive HEAD index.html README.md README.zh-CN.md LICENSE NOTICE RELEASE_CHECKLIST.md SECURITY.md CONTRIBUTING.md CODE_OF_CONDUCT.md CHANGELOG.md agent-entry.example.toml docs examples openspec/changes/release-readiness-site/review.md openspec/changes/terminal-observability/review.md | tar -x -C _site
           touch _site/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:
