@@ -24,7 +24,7 @@ jobs:
       - run: uv sync --locked --extra dev
       - run: uv run --locked python scripts/check_release.py
       - run: uv run --locked --extra dev pytest -q
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
       - name: Prepare static files
         run: |
           mkdir -p _site
