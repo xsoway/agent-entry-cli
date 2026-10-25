@@ -11,6 +11,7 @@ import json
 import os
 import re
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
@@ -110,13 +111,37 @@ class SummaryStore:
         except (ValueError, TypeError, KeyError, RecursionError):
             raise ValueError("invalid_summary") from None
 
-    def list_sessions(self, limits: Limits) -> list[str]:
+    def entries(self, limits: Limits) -> list[dict[str, str]]:
+        """按本地保存时间列出有效摘要；预览只读取已经显式保存的材料。"""
         self.safe()
-        result = []
-        for path in sorted(self.directory.glob("*.json"), reverse=True)[:100]:
+        candidates = []
+        for path in self.directory.glob("*.json"):
             try:
-                self.load(path.stem, limits)
-                result.append(path.stem)
-            except (ValueError, OSError):
+                candidates.append((path.stat(follow_symlinks=False).st_mtime_ns, path))
+            except OSError:
+                continue
+        result = []
+        for timestamp, path in sorted(
+            candidates, key=lambda item: (item[0], item[1].name), reverse=True
+        ):
+            try:
+                state = self.load(path.stem, limits)
+                summary = state.summary or {}
+                preview = " ".join(summary.get("task") or summary.get("goals") or ["未命名摘要"])
+                result.append(
+                    {
+                        "id": path.stem,
+                        "saved_at": datetime.fromtimestamp(timestamp / 10**9, UTC).isoformat(
+                            timespec="seconds"
+                        ),
+                        "preview": re.sub(r"\s+", " ", preview)[:100],
+                    }
+                )
+                if len(result) >= 100:
+                    break
+            except (ValueError, OSError, OverflowError):
                 continue
         return result
+
+    def list_sessions(self, limits: Limits) -> list[str]:
+        return [entry["id"] for entry in self.entries(limits)]

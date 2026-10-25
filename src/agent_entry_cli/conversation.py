@@ -98,14 +98,17 @@ class Conversation:
             raise ValueError("context_compaction_required")
         return value
 
-    def needs_compaction(self, request: str = "") -> bool:
+    def needs_compaction(self, request: str = "", *, overhead: int = 0) -> bool:
         """检查窗口软阈值与原有64KiB输入上限，估计含固定系统预留。"""
         try:
             size = estimate_tokens(self.compose(request))
         except ValueError:
             return True
         available = (
-            self.limits.context_window - self.limits.output_reserve - self.limits.system_reserve
+            self.limits.context_window
+            - self.limits.output_reserve
+            - self.limits.system_reserve
+            - overhead
         )
         return bool(self.messages) and size > int(available * 0.75)
 

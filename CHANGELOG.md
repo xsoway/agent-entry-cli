@@ -1,10 +1,24 @@
-# Changelog
+# 更新日志
 
-## 0.1.0 — Unreleased
+## 0.1.0 — 尚未发布
 
-- Independent project-aware terminal and explicit trusted Python plugin API.
-- Async tools with per-call project policy and default-denied side effects.
-- Streaming responses, cancellation, bounded next-turn queue and metadata-only execution logs.
-- Context window checks, structured summarization, explicit scope-safe checkpoints and usage diagnostics.
-- Knowledge-search and optional read-only evaluation framework examples.
-- Reproducible uv environment, automated checks and distribution build workflow.
+- 独立的项目感知终端，以及显式加载可信 Python 插件的 API。
+- 异步工具、逐次调用的项目授权策略，默认拒绝有副作用的操作。
+- 流式响应、取消、有容量限制的下一轮队列，以及仅含元数据的执行日志。
+- 上下文窗口检查、结构化摘要、显式且校验作用域的检查点，以及用量诊断。
+- 知识搜索示例，以及可选的只读评测框架接入示例。
+- 可复现的 uv 环境、自动检查和分发包构建流程。
+
+### 终端交互与可观测性改进
+
+- 修复空闲 Ctrl+C 退出和普通模式阻塞输入；支持运行中取消、再次中断及清理后退出。
+- 增加中文错误建议、工具与状态命令、斜杠命令补全和项目命令帮助。
+- 增加安全元数据观察、动态耗时、模型／工具／摘要／清理阶段及实时上下文和用量区分。
+- 摘要列表按本地保存时间排序，显示任务预览，支持显式恢复 latest；保持原检查点格式。
+
+### 发布准备与官方页
+
+- 增加可离线打开的双语官方页、真实浏览器验收脚本与手动 Pages 工作流。
+- 增加干净提交、可达历史及公开提交邮箱预检；覆盖混合编码与 commit/tag 消息，检测报告不输出原文。
+- 补充中文导航、FAQ、包链接目标、发布说明、IDE 忽略和 Git 行尾规则。
+- 远程仓库、私密漏洞报告通道和 Pages 尚待实际创建与部署，不声明已发布。

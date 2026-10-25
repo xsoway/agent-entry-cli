@@ -11,6 +11,11 @@ keywords = ["agent", "cli", "terminal", "llm"]
 classifiers = ["Development Status :: 3 - Alpha", "Environment :: Console", "Programming Language :: Python :: 3.13", "Operating System :: MacOS :: MacOS X", "Operating System :: POSIX :: Linux"]
 dependencies = ["openai-agents>=0.22.3,<0.23", "prompt-toolkit>=3.0.52,<4", "rich>=14,<15"]
 
+[project.urls]
+Homepage = "https://xsoway.github.io/agent-entry-cli/"
+Repository = "https://github.com/xsoway/agent-entry-cli"
+Issues = "https://github.com/xsoway/agent-entry-cli/issues"
+
 [project.optional-dependencies]
 dev = ["pytest>=8,<10", "ruff>=0.12,<1", "pyright>=1.1.400,<2"]
 

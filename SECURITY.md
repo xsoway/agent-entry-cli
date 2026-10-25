@@ -1,20 +1,26 @@
-# Security
+# 安全说明
 
-This alpha release runs explicitly selected local project code in the same Python
-process. A plugin is trusted code with the user's filesystem and network permissions;
-`Tool(side_effect=False)` is a declaration, not a sandbox or static proof of read-only behavior.
-Only load plugins and tools you trust. No shell tool is enabled by default.
+此 Alpha 版本在同一个 Python 进程中运行显式选定的本地项目代码。
+插件是可信代码，拥有用户的文件系统和网络权限；
+`Tool(side_effect=False)` 只是声明，不是沙箱，也不是只读行为的静态证明。
+仅加载你信任的插件和工具。默认不启用 shell 工具。
 
-Each declared side-effect tool requires a synchronous project authorization callback.
-That callback must verify application authorization and relevant business state on every
-invocation. A conversation, restored summary or model statement never grants approval.
-Unknown writes are not automatically retried; verify external state through your project.
+每个声明为有副作用的工具，都需要同步的项目授权回调。
+该回调必须在每次调用时检查应用权限和相关业务状态。
+对话、恢复的摘要或模型声明都不能授予审批权限。
+未知写操作不会自动重试；请通过项目侧核实外部状态。
 
-Metadata logs omit raw prompts, outputs, tool inputs/results and exception bodies.
-Explicit `/save` generates a best-effort redacted summary; inspect the suitability of
-business facts for persistence. Redaction is not a complete data-loss-prevention system.
+元数据日志不包含原始提示词、输出、工具输入／结果或异常正文。
+显式 `/save` 生成尽力脱敏的摘要；请判断其中的业务事实是否适合持久化。
+脱敏不是完整的数据防泄漏系统。
 
-To report vulnerabilities, use the repository's private security advisory channel if
-available or contact its maintainer privately through an established channel. Do not
-post active credentials or confidential reproduction data in public issues.
-Supported security fixes initially target the current 0.1.x release only.
+## 漏洞报告入口
+
+维护账号为 [xsoway](https://github.com/xsoway)。当前目标仓库尚未创建，**尚无本项目可用的私密漏洞报告通道**，不能把此账号页面当成私信服务。
+
+仓库公开前，维护者需在 GitHub 启用并验证 Private Vulnerability Reporting，之后使用目标入口：
+`https://github.com/xsoway/agent-entry-cli/security/advisories/new`。
+该 URL 当前仅为发布配置目标，未声称已经可用；未验证该入口前，安全报告渠道门禁保持待完成。
+
+在私密通道可用前，请勿提交敏感复现材料。仓库开放后可通过普通 Issue **仅请求建立私密联系渠道**，不要包含漏洞细节、有效凭据、原始对话、个人或业务数据。联系方式与私密通道可用性需在[发布检查](RELEASE_CHECKLIST.md)中记录。
+初期安全修复仅面向当前的 0.1.x 版本。

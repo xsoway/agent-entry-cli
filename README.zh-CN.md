@@ -2,7 +2,13 @@
 
 为现有项目提供主 Agent 终端入口。项目提供说明、异步工具和授权策略，CLI 负责对话、流式输出、上下文、取消、队列和用量。
 
-[English](README.md) · [接入说明](docs/integration.md) · [架构与边界](docs/architecture.md)
+[官方页（本地预览）](index.html) · [完整中文说明](README.md) · [接入说明](docs/integration.md) · [架构与边界](docs/architecture.md)
+
+## 项目定位
+
+开发这个独立 CLI，是为了让多个 Python 业务项目复用终端、上下文和会话控制，同时保留各自的服务实现与授权规则。项目显式提供异步工具，模型／工具循环复用 OpenAI Agents SDK。
+
+Codex、Pi、OpenCode 和 Claude Code 也有 SDK 或扩展入口；选择本库的主要理由是 Python 业务函数接入和项目授权边界贴合需求。完整的开发初衷、逐工具对比、设计取舍、应用场景与选型建议见[完整中文说明中的定位章节](README.md#为什么开发独立的-agent-cli)。
 
 ## 当前能力
 
@@ -82,3 +88,7 @@ uv run --locked agent-entry --project examples/knowledge --plugin examples/knowl
 窗口是应用配置，字节估计不是供应商 tokenizer。累计上限在响应后结算，可能超额，不是账户预付费保证。默认只记执行元数据；显式保存的摘要仍需判断业务事实是否适合持久化。
 
 开发检查、目录结构和贡献方式见 [README](README.md)、[CONTRIBUTING](CONTRIBUTING.md)。验收事实见 [docs/acceptance.md](docs/acceptance.md)。许可证为 [MIT](LICENSE)。
+
+终端快捷键、执行阶段、实时上下文与错误处理见[终端操作手册](docs/terminal.md)。
+
+官方页的双语交互、本地验收与待部署状态见[发布说明](docs/releasing.md)。

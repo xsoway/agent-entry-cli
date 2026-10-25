@@ -328,3 +328,47 @@ def test_evaluation_adapter_reaps_child_when_cancelled_during_start(tmp_path, mo
                 await child.wait()
 
     asyncio.run(run())
+
+
+def test_enhanced_panels_keep_untrusted_text_literal_and_redacted(tmp_path, monkeypatch):
+    from io import StringIO
+
+    from rich.console import Console
+
+    from agent_entry_cli import Config, Project
+    from agent_entry_cli.terminal import Terminal
+
+    monkeypatch.setenv("OPENAI_API_KEY", "credential-for-style-test")
+    out = StringIO()
+    terminal = Terminal(
+        Project(tmp_path),
+        Config(model="fixture"),
+        plain=True,
+        console=Console(file=out, width=48, color_system=None),
+    )
+    terminal.enhanced = True
+    terminal.panel("[bold]literal[/bold]\x1b[2J credential-for-style-test", "You")
+    rendered = out.getvalue()
+    assert "You" in rendered and "╭" in rendered
+    assert "[bold]literal[/bold]" in rendered
+    assert "credential-for-style-test" not in rendered and "\x1b" not in rendered
+    assert all(len(line) <= 48 for line in rendered.splitlines())
+    terminal.enhanced = False
+    out.seek(0)
+    out.truncate()
+    terminal.panel("plain body", "You")
+    assert out.getvalue() == "plain body\n"
+
+
+def test_editor_status_updates_scope_model_queue_and_state(tmp_path):
+    from agent_entry_cli import Config, Project
+    from agent_entry_cli.terminal import Terminal
+
+    terminal = Terminal(Project(tmp_path), Config(model="fixture"), plain=True)
+    assert "就绪" in terminal.toolbar()[0][1]
+    terminal.queue.append("queued")
+    terminal.paused = True
+    text = terminal.toolbar()[0][1]
+    assert "已暂停" in text and "队列 1" in text and "fixture" in text
+    terminal._runtime = object()
+    assert "执行中" in terminal.toolbar()[0][1]

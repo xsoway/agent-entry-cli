@@ -1,18 +1,18 @@
-# Independent project agent CLI
+# 独立的项目 Agent CLI
 
-## Why
-Provide an independently installable, small main-agent terminal reusable by different projects.
+## 背景
+提供一个可独立安装、轻量、可供不同项目复用的主 Agent 终端。
 
-## What Changes
-One Python package, a Project/Tool API, explicit trusted plugin loading, a default SDK backend, stream/stop/follow-up, bounded context/summary, explicit scope-safe summary restore, usage diagnostics and metadata events. Include knowledge-search and existing evaluation CLI read-only examples. MIT, CI, contributor/security docs, tests and standalone wheel acceptance.
+## 变更内容
+提供一个 Python 包、Project/Tool API、显式加载可信插件的机制、默认 SDK 后端，以及流式输出、停止、后续输入、有界上下文与摘要、显式且作用域安全的摘要恢复、用量诊断和元数据事件。包含知识检索和现有评测 CLI 的只读示例。提供 MIT 许可证、CI、贡献与安全文档、测试及独立 wheel 验收。
 
-## Capabilities
+## 能力
 
-### New Capabilities
-- `project-entry`: Independent terminal, project tools, context and safe runtime lifecycle.
+### 新增能力
+- `project-entry`：独立终端、项目工具、上下文及安全的运行时生命周期。
 
-### Modified Capabilities
-None.
+### 修改的能力
+无。
 
-## Impact
-No dependency on agent_eval_harness, no shell tool by default, no auto-discovered plugin execution, no framework approvals, no remote publication. Existing ah remains unchanged. Python 3.13 and current SDK are deliberate initial compatibility limits.
+## 影响
+不依赖 agent_eval_harness，默认不提供 shell 工具，不自动发现并执行插件，不引入框架审批，不向远程发布。现有 ah 保持不变。Python 3.13 和当前 SDK 是初始版本有意设定的兼容性边界。

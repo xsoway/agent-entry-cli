@@ -1,11 +1,11 @@
-## 1. Contracts and project integration
-- [x] 1.1 Strict config, Project/Tool API and explicit plugin loading with RED→GREEN.
-- [x] 1.2 Context/summary/usage and immutable scoped checkpoints with RED→GREEN.
-## 2. Runtime and terminal
-- [x] 2.1 SDK budgets, stream/cancel/cleanup and unknown write handling.
-- [x] 2.2 Persistent terminal loop, commands, bounded follow-up queue and project isolation.
-- [x] 2.3 Knowledge-search and optional read-only evaluation CLI adapters.
-## 3. Repository and acceptance
-- [x] 3.1 MIT/NOTICE, bilingual README, contribution/security documents, CI and issue templates.
-- [x] 3.2 Final full tests/lint/format/types/build, isolated wheel and real model/PTTY acceptance.
-- [x] 3.3 Final defect-focused review fixes, evidence and task archive.
+## 1. 契约与项目集成
+- [x] 1.1 通过 RED→GREEN 实现严格配置、Project/Tool API 和显式插件加载。
+- [x] 1.2 通过 RED→GREEN 实现上下文、摘要、用量和不可变的作用域检查点。
+## 2. 运行时与终端
+- [x] 2.1 SDK 预算、流式输出、取消、清理及未知写入状态处理。
+- [x] 2.2 持续运行的终端循环、命令、有界后续输入队列和项目隔离。
+- [x] 2.3 知识检索及可选的只读评测 CLI 适配器。
+## 3. 仓库与验收
+- [x] 3.1 MIT/NOTICE、双语 README、贡献与安全文档、CI 和 Issue 模板。
+- [x] 3.2 最终全量测试、lint、格式、类型与构建检查，以及隔离环境 wheel 和真实模型/PTTY 验收。
+- [x] 3.3 最终面向缺陷的审查修复、证据和任务归档。

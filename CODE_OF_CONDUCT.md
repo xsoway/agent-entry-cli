@@ -1,9 +1,9 @@
-# Community conduct
+# 社区行为准则
 
-Be respectful, factual and constructive. Welcome questions and different experience levels.
-Do not harass people, publish private information, impersonate others or post malicious content.
-Critique changes and evidence rather than attacking contributors.
+尊重他人，以事实为依据，提出建设性意见。欢迎提问，也欢迎不同经验水平的参与者。
+不得骚扰他人、公开私人信息、冒充他人或发布恶意内容。
+讨论应围绕改动和证据，不针对贡献者进行人身攻击。
 
-Maintainers may remove harmful content and restrict participation. Report concerns privately
-to a maintainer through an established channel; avoid including other people's private data
-in public threads. Maintainers should explain moderation decisions and apply these rules fairly.
+维护者可以删除有害内容并限制相关人员参与。发现问题时，请通过已有渠道私下联系维护者；
+避免在公开讨论中包含他人的私人数据。
+维护者应解释管理决定，并公平执行这些规则。

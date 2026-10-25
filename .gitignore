@@ -13,3 +13,8 @@ __pycache__/
 dist/
 build/
 .DS_Store
+
+# Local editor and site build output
+.vscode/
+.idea/
+_site/

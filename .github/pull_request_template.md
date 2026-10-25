@@ -1,9 +1,10 @@
-## Problem and resulting behavior
+## 问题与变更后的行为
 
-## Validation
-- [ ] Regression added where relevant
-- [ ] Tests, lint, format, type checks and build pass
-- [ ] Docs match implemented behavior
-- [ ] No credentials, raw private conversations or project state committed
+## 验证
 
-## Compatibility and remaining limits
+- [ ] 已按需补充回归测试
+- [ ] 测试、lint、格式、类型检查和构建均通过
+- [ ] 文档与实现行为一致
+- [ ] 未提交凭据、原始私密对话或项目运行状态
+
+## 兼容性与剩余限制

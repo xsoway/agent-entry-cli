@@ -1,0 +1,38 @@
+name: Official page
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked --extra dev
+      - run: uv run --locked python scripts/check_release.py
+      - run: uv run --locked --extra dev pytest -q
+      - uses: actions/configure-pages@v5
+      - name: Prepare static files
+        run: |
+          mkdir -p _site
+          git archive HEAD index.html README.md README.zh-CN.md LICENSE NOTICE RELEASE_CHECKLIST.md SECURITY.md CONTRIBUTING.md CODE_OF_CONDUCT.md CHANGELOG.md agent-entry.example.toml docs examples openspec/changes/release-readiness-site/review.md | tar -x -C _site
+          touch _site/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

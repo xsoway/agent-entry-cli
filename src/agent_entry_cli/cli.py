@@ -20,6 +20,8 @@ from pathlib import Path
 from uuid import uuid4
 
 from .config import load_config
+from .display import format_result
+from .errors import explain, safe_reason
 from .privacy import clean
 from .project import Project
 from .runtime import Runtime
@@ -51,21 +53,19 @@ def load_project(root: Path, plugin: Path | None = None) -> Project:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="A project-aware terminal for your main agent.")
+    parser = argparse.ArgumentParser(description="为项目主 Agent 提供终端入口。")
     parser.add_argument("--version", action="version", version="agent-entry-cli 0.1.0")
     parser.add_argument("--project", type=Path, default=Path.cwd())
-    parser.add_argument(
-        "--plugin", type=Path, help="Explicitly execute trusted local build_project(root) code."
-    )
+    parser.add_argument("--plugin", type=Path, help="显式执行可信的本地 build_project(root) 代码。")
     parser.add_argument("--model")
-    parser.add_argument("--message", help="One noninteractive request.")
+    parser.add_argument("--message", help="执行一次非交互请求。")
     parser.add_argument("--plain", action="store_true")
     parser.add_argument(
-        "--json", action="store_true", help="Metadata and final response for a one-shot request."
+        "--json", action="store_true", help="单次请求以 JSON 输出元数据和最终答复。"
     )
     parser.add_argument("--diagnostics", action="store_true")
     parser.add_argument(
-        "--init", action="store_true", help="Create data-only agent-entry.toml without overwriting."
+        "--init", action="store_true", help="创建纯数据 agent-entry.toml，不覆盖已有文件。"
     )
     args = parser.parse_args(argv)
     try:
@@ -80,9 +80,9 @@ def main(argv: list[str] | None = None) -> int:
             )
             with os.fdopen(fd, "w") as stream:
                 stream.write(
-                    '# Credentials belong in the environment, never this file.\nmodel = ""\napi = "chat_completions"\ncontext_window = 65536\noutput_reserve = 4096\nsystem_reserve = 8192\n'
+                    '# 凭据仅通过环境变量提供，禁止写入此文件。\nmodel = ""\napi = "chat_completions"\ncontext_window = 65536\noutput_reserve = 4096\nsystem_reserve = 8192\n'
                 )
-            print("Created agent-entry.toml. Set model and OPENAI_API_KEY.")
+            print("已创建 agent-entry.toml；请填写 model，并设置对应的密钥环境变量。")
             return 0
         config = load_config(root, model=args.model)
         project = load_project(root, args.plugin)
@@ -105,7 +105,7 @@ def main(argv: list[str] | None = None) -> int:
                     json.dumps(row, ensure_ascii=False)
                     if args.json
                     else clean(
-                        f"{result.status}: {result.reason}\n{result.output or ''}\nExecution: {result.execution_id}\nLedger: {result.ledger_path}"
+                        f"{result.output or ''}\n{format_result(row, config.max_model_calls)}"
                     )
                 )
 
@@ -118,11 +118,8 @@ def main(argv: list[str] | None = None) -> int:
         return Terminal(
             project, config, plain=args.plain, plugin=args.plugin, model_override=args.model
         ).run()
-    except (ValueError, OSError):
-        print(
-            "Startup rejected: check project, config, explicit plugin, model and credential environment.",
-            file=sys.stderr,
-        )
+    except (ValueError, OSError) as error:
+        print(explain(safe_reason(error)), file=sys.stderr)
         return 2
     except KeyboardInterrupt:
         return 130

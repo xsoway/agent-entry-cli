@@ -1,9 +1,9 @@
-# Design
+# 设计
 
-Project supplies root, instructions, async tools and an optional per-call authorization callback. Tool metadata marks side effects; default denies side effects. Explicit --plugin loads a trusted local build_project(root) function, otherwise no project code executes. Config is TOML data only.
+项目提供根目录、指令、异步工具和可选的逐次调用授权回调。工具元数据标记副作用；默认拒绝有副作用的操作。显式指定 --plugin 才会加载可信本地 build_project(root) 函数，否则不执行任何项目代码。配置仅为 TOML 数据。
 
-SDK owns model/tool loop; Runtime owns context admission, timeout, cancellation settlement, per-execution known/unknown usage, and metadata-only records. SDK client disables transport retries; write tools are never retried by this library. Summary requests have no tools and use the same budget. Conversation mutation commits after success and cleanup only.
+SDK 负责模型与工具循环；Runtime 负责上下文准入、超时、取消后的收尾、每次执行中已知与未知的用量，以及仅含元数据的记录。SDK 客户端禁用传输层重试；本库永不重试写入工具。摘要请求不携带工具，使用相同预算。只有在执行成功且清理完成后，才提交对话变更。
 
-Terminal owns local controls and a bounded next-turn queue. Streaming and input run in one event loop. Consumer is shielded; SDK alone cancels its run loop; the iterator and SDK tasks settle before a terminal result. Non-cooperative plugin cleanup yields interrupted rather than claiming cancellation succeeded.
+终端负责本地控制和有界的下一轮输入队列。流式输出与输入在同一事件循环中运行。消费者受屏蔽保护；仅由 SDK 取消自身的运行循环；迭代器和 SDK 任务收尾后才返回终态结果。插件不配合清理时返回 interrupted，不声称取消成功。
 
-Summary files are immutable UUID, schema/scope validated, restrictive permissions and no original messages or grants. Read-only knowledge example constrains paths, sizes and symlinks. Evaluation example invokes only agent-eval status using a fixed argument list; old Core retains business state and approvals.
+摘要文件使用不可变的 UUID，校验模式与作用域，设置严格权限，不包含原始消息或授权。只读知识示例限制路径、大小和符号链接。评测示例使用固定参数列表，仅调用 agent-eval status；旧 Core 继续保有业务状态和审批。

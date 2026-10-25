@@ -1,0 +1,4 @@
+- [x] Add failing regressions
+- [x] Restore terminal presentation
+- [x] Verify PTY modes and quality gates
+- [x] Review final diff

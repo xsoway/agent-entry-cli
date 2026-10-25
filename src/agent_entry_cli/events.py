@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 _FIELDS = {
+    "execution_id",
     "status",
     "reason",
     "model_calls",
@@ -41,7 +42,7 @@ class EventLog:
 
     def emit(self, event: str, attributes: dict[str, Any]) -> None:
         if (
-            event not in {"started", "model", "tool", "ended", "compaction"}
+            event not in {"started", "model", "tool", "ended", "compaction", "cleanup"}
             or set(attributes) - _FIELDS
         ):
             raise ValueError("event_payload_not_allowed")

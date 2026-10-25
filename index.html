@@ -1,0 +1,2020 @@
+<!doctype html>
+<html lang="zh-CN" data-motion="on">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta
+            name="description"
+            content="为现有 Python 项目提供可嵌入的 Agent 终端入口。显式工具、逐次授权、上下文管理与安全执行元数据。"
+        />
+        <meta name="color-scheme" content="dark" />
+        <title>Agent Entry CLI · 项目的 Agent 入口</title>
+        <style>
+            :root {
+                --bg: #1d2021;
+                --surface: #282828;
+                --raised: #32302f;
+                --line: #504945;
+                --fg: #fbf1c7;
+                --muted: #bdae93;
+                --accent: #d79921;
+                --green: #b8bb26;
+                --blue: #83a598;
+                --purple: #d3869b;
+                --display:
+                    "Space Grotesk", "PingFang SC", "Microsoft YaHei",
+                    sans-serif;
+                --mono: "JetBrains Mono", Menlo, Consolas, monospace;
+            }
+            * {
+                box-sizing: border-box;
+            }
+            html {
+                scroll-behavior: smooth;
+                scroll-padding-top: 104px;
+            }
+            body {
+                margin: 0;
+                background: var(--bg);
+                color: var(--fg);
+                font-family: var(--display);
+                font-size: 17px;
+                line-height: 1.75;
+                -webkit-font-smoothing: antialiased;
+            }
+            ::selection {
+                background: var(--accent);
+                color: var(--bg);
+            }
+            [hidden] {
+                display: none !important;
+            }
+            a {
+                color: inherit;
+                text-decoration: none;
+            }
+            button,
+            input {
+                font: inherit;
+            }
+            button,
+            a,
+            summary {
+                -webkit-tap-highlight-color: transparent;
+            }
+            button {
+                cursor: pointer;
+            }
+            a:focus-visible,
+            button:focus-visible,
+            summary:focus-visible,
+            input:focus-visible {
+                outline: 2px solid var(--accent);
+                outline-offset: 5px;
+            }
+            a,
+            button,
+            summary {
+                transition:
+                    color 0.2s,
+                    background 0.2s,
+                    border-color 0.2s;
+            }
+            p {
+                color: var(--muted);
+                text-wrap: pretty;
+                margin: 0 0 24px;
+            }
+            h1,
+            h2,
+            h3 {
+                font-weight: 500;
+                letter-spacing: -0.04em;
+                line-height: 1.2;
+                text-wrap: pretty;
+                margin: 0;
+            }
+            h1 {
+                font-size: clamp(42px, 4.6vw, 70px);
+                max-width: 13em;
+            }
+            h2 {
+                font-size: clamp(32px, 3.3vw, 48px);
+            }
+            h3 {
+                font-size: 23px;
+                letter-spacing: -0.025em;
+            }
+            code,
+            pre,
+            .mono {
+                font-family: var(--mono);
+            }
+            code {
+                font-size: 0.84em;
+                overflow-wrap: anywhere;
+            }
+            pre {
+                font-size: 13px;
+                line-height: 1.9;
+                margin: 0;
+                white-space: pre-wrap;
+                overflow-wrap: anywhere;
+                color: var(--fg);
+            }
+            .wrap {
+                max-width: 1200px;
+                padding: 0 40px;
+                margin: auto;
+            }
+            .skip {
+                position: fixed;
+                left: 16px;
+                top: -100px;
+                background: var(--accent);
+                color: var(--bg);
+                padding: 10px;
+                z-index: 10;
+            }
+            .skip:focus {
+                top: 12px;
+            }
+            .ambient {
+                pointer-events: none;
+                position: fixed;
+                inset: 0;
+                z-index: -1;
+                background:
+                    radial-gradient(
+                        ellipse at 85% 12%,
+                        #d799210b,
+                        transparent 48%
+                    ),
+                    linear-gradient(90deg, #50494510 1px, transparent 1px);
+                background-size:
+                    auto,
+                    80px 80px;
+            }
+            .glow {
+                position: absolute;
+                inset: 0 0 65% 45%;
+                background: radial-gradient(
+                    ellipse,
+                    #d7992110,
+                    transparent 65%
+                );
+                animation: drift 18s ease-in-out infinite alternate;
+            }
+            @keyframes drift {
+                to {
+                    transform: translate(-12%, 12%);
+                }
+            }
+            header {
+                position: sticky;
+                top: 0;
+                z-index: 5;
+                background: #1d2021f2;
+                backdrop-filter: blur(16px);
+                border-bottom: 1px solid var(--line);
+            }
+            .nav {
+                min-height: 80px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 24px;
+            }
+            .brand {
+                font: 600 18px var(--mono);
+                white-space: nowrap;
+                letter-spacing: -0.04em;
+            }
+            .brand-mark {
+                color: var(--accent);
+                padding-right: 10px;
+            }
+            .nav-links {
+                display: flex;
+                align-items: center;
+                gap: 26px;
+                font-size: 14px;
+                color: var(--muted);
+            }
+            .nav-links a:hover {
+                color: var(--fg);
+            }
+            .small-button {
+                background: none;
+                color: var(--fg);
+                border: 1px solid var(--line);
+                border-radius: 5px;
+                min-height: 44px;
+                padding: 6px 13px;
+                font-size: 14px;
+            }
+            .small-button:hover {
+                border-color: var(--accent);
+                color: var(--accent);
+            }
+            .hero {
+                padding: 100px 0 72px;
+                display: grid;
+                grid-template-columns: 1.08fr 1fr;
+                align-items: center;
+                gap: 64px;
+            }
+            .eyebrow {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font: 11px var(--mono);
+                letter-spacing: 0.1em;
+                color: var(--accent);
+                margin-bottom: 30px;
+            }
+            .dot {
+                width: 6px;
+                height: 6px;
+                display: inline-block;
+                background: var(--accent);
+                border-radius: 50%;
+            }
+            .hero h1 {
+                margin-bottom: 30px;
+            }
+            .hero .intro {
+                max-width: 32em;
+                font-size: 17px;
+            }
+            .actions {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+                align-items: center;
+                margin-top: 32px;
+            }
+            .button {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 15px;
+                min-height: 48px;
+                padding: 10px 19px;
+                border: 1px solid var(--line);
+                border-radius: 5px;
+                font-size: 14px;
+            }
+            .button.primary {
+                background: var(--accent);
+                border-color: var(--accent);
+                color: var(--bg);
+                font-weight: 600;
+            }
+            .button:hover {
+                border-color: var(--accent);
+                transform: translateY(-1px);
+            }
+            .button:active {
+                transform: translateY(0);
+            }
+            .subnote {
+                font-size: 12px;
+                margin: 18px 0 0;
+                color: var(--muted);
+            }
+            .terminal {
+                background: #181a1b;
+                border: 1px solid var(--line);
+                border-radius: 8px;
+                box-shadow: 0 24px 72px #0003;
+                min-width: 0;
+                position: relative;
+            }
+            .terminal-bar {
+                height: 44px;
+                padding: 0 18px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                border-bottom: 1px solid var(--line);
+                color: var(--muted);
+                font: 10px var(--mono);
+                letter-spacing: 0.02em;
+            }
+            .terminal-bar i {
+                display: block;
+                width: 7px;
+                height: 7px;
+                border: 1px solid var(--line);
+                border-radius: 50%;
+            }
+            .terminal-bar span {
+                margin-left: 12px;
+            }
+            .terminal-body {
+                padding: 24px;
+                min-height: 265px;
+                position: relative;
+            }
+            #hero-terminal {
+                font-size: 12px;
+                white-space: pre-wrap;
+                line-height: 2.25;
+                color: var(--muted);
+                min-height: 205px;
+            }
+            .cursor {
+                display: inline-block;
+                background: var(--accent);
+                width: 7px;
+                height: 14px;
+                vertical-align: middle;
+                animation: blink 1.2s step-end infinite;
+            }
+            @keyframes blink {
+                50% {
+                    opacity: 0;
+                }
+            }
+            .terminal-foot {
+                padding: 12px 20px;
+                border-top: 1px solid var(--line);
+                display: flex;
+                justify-content: space-between;
+                gap: 10px;
+                color: var(--muted);
+                font: 10px var(--mono);
+            }
+            .meta-strip {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                border-block: 1px solid var(--line);
+                margin-bottom: 100px;
+            }
+            .meta-strip > div {
+                padding: 22px 0;
+            }
+            .meta-strip > div + div {
+                padding-left: 32px;
+                border-left: 1px solid var(--line);
+            }
+            .meta-label {
+                display: block;
+                color: var(--muted);
+                font: 10px var(--mono);
+                letter-spacing: 0.08em;
+                margin-bottom: 8px;
+            }
+            .meta-value {
+                font: 16px var(--mono);
+            }
+            section {
+                padding: 0 0 100px;
+                scroll-margin-top: 100px;
+            }
+            .section-head {
+                display: flex;
+                align-items: flex-end;
+                justify-content: space-between;
+                gap: 35px;
+                margin-bottom: 36px;
+            }
+            .section-head p {
+                max-width: 420px;
+                margin: 0;
+                font-size: 14px;
+            }
+            .kicker {
+                font: 11px var(--mono);
+                letter-spacing: 0.1em;
+                color: var(--accent);
+                display: block;
+                margin-bottom: 16px;
+            }
+            .flow {
+                display: grid;
+                grid-template-columns: repeat(5, 1fr);
+                border-block: 1px solid var(--line);
+                margin-bottom: 20px;
+            }
+            .flow-step {
+                position: relative;
+                padding: 28px 18px;
+                border-bottom: 2px solid transparent;
+                transition:
+                    background 0.4s,
+                    border-color 0.4s;
+            }
+            .flow-step + div {
+                border-left: 1px solid var(--line);
+            }
+            .flow-step.active {
+                background: #d7992109;
+                border-bottom-color: var(--accent);
+            }
+            .flow-step b {
+                display: block;
+                font: 12px var(--mono);
+                color: var(--accent);
+                margin-bottom: 24px;
+            }
+            .flow-step strong {
+                display: block;
+                font-size: 15px;
+                font-weight: 500;
+                margin-bottom: 8px;
+            }
+            .flow-step small {
+                color: var(--muted);
+                display: block;
+                font-size: 12px;
+                line-height: 1.6;
+            }
+            .caption {
+                font-size: 12px;
+                line-height: 1.7;
+                color: var(--muted);
+            }
+            .comparison {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 14px;
+            }
+            .comparison th {
+                text-align: left;
+                color: var(--muted);
+                font-size: 11px;
+                letter-spacing: 0.05em;
+                font-weight: 400;
+                border-bottom: 1px solid var(--line);
+                padding: 12px 20px 15px 0;
+            }
+            .comparison td {
+                border-bottom: 1px solid var(--line);
+                padding: 22px 20px 22px 0;
+                vertical-align: top;
+                width: 33.33%;
+                color: var(--muted);
+            }
+            .comparison td:last-child {
+                color: var(--fg);
+            }
+            .features {
+                display: grid;
+                grid-template-columns: 1fr 1.3fr;
+                gap: 80px;
+            }
+            .feature-list article {
+                padding: 24px 0;
+                border-top: 1px solid var(--line);
+                display: grid;
+                grid-template-columns: 40px 1fr;
+                gap: 12px;
+            }
+            .feature-list article:last-child {
+                border-bottom: 1px solid var(--line);
+            }
+            .feature-list .number {
+                color: var(--accent);
+                font: 12px var(--mono);
+                padding-top: 5px;
+            }
+            .feature-list h3 {
+                font-size: 20px;
+                margin-bottom: 10px;
+            }
+            .feature-list p {
+                font-size: 14px;
+                margin: 0;
+            }
+            .shot {
+                margin-top: 36px;
+                background: var(--surface);
+                border: 1px solid var(--line);
+                border-radius: 6px;
+                overflow: hidden;
+            }
+            .shot img {
+                width: 100%;
+                display: block;
+                max-height: 310px;
+                object-fit: contain;
+                background: var(--surface);
+            }
+            .shot figcaption {
+                padding: 12px 18px;
+                font-size: 11px;
+                color: var(--muted);
+                border-top: 1px solid var(--line);
+            }
+            .install-layout {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 32px;
+            }
+            .code-panel {
+                background: var(--surface);
+                border: 1px solid var(--line);
+                border-radius: 6px;
+                overflow: hidden;
+            }
+            .code-label {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 14px 20px;
+                border-bottom: 1px solid var(--line);
+                font: 11px var(--mono);
+                color: var(--muted);
+            }
+            .code-panel pre {
+                padding: 22px;
+            }
+            .copy {
+                border: 0;
+                background: transparent;
+                color: var(--accent);
+                font-size: 12px;
+                min-height: 32px;
+                padding: 0 6px;
+            }
+            .install-note {
+                font-size: 12px;
+                margin: 16px 0 0;
+            }
+            .command-console {
+                border: 1px solid var(--line);
+                border-radius: 6px;
+                padding: 24px;
+                background: #181a1b;
+            }
+            .chips {
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+                margin-bottom: 20px;
+            }
+            .chip {
+                font: 12px var(--mono);
+                min-height: 40px;
+                padding: 6px 12px;
+                background: none;
+                border: 1px solid var(--line);
+                border-radius: 4px;
+                color: var(--muted);
+            }
+            .chip[aria-pressed="true"] {
+                background: var(--accent);
+                border-color: var(--accent);
+                color: var(--bg);
+            }
+            #command-output {
+                font-size: 14px;
+                line-height: 1.8;
+                min-height: 128px;
+                color: var(--fg);
+            }
+            .tree-layout {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 64px;
+            }
+            #tree {
+                font: 13px/2 var(--mono);
+                padding: 24px;
+                border: 1px solid var(--line);
+                border-radius: 6px;
+                background: var(--surface);
+            }
+            #tree summary {
+                cursor: pointer;
+                min-height: 40px;
+                color: var(--accent);
+                display: list-item;
+                list-style-position: inside;
+            }
+            #tree details + details {
+                border-top: 1px solid #50494566;
+            }
+            #tree .children {
+                padding: 0 0 15px 20px;
+                color: var(--muted);
+            }
+            #tree .leaf {
+                display: block;
+                overflow-wrap: anywhere;
+            }
+            #tree .root-file {
+                display: block;
+                color: var(--muted);
+                padding: 3px 0;
+            }
+            .route-list {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+            }
+            .route-list li {
+                padding: 20px 0;
+                border-top: 1px solid var(--line);
+            }
+            .route-list strong {
+                display: block;
+                font-size: 16px;
+                font-weight: 500;
+                margin-bottom: 5px;
+            }
+            .route-list p {
+                font-size: 13px;
+                margin: 0;
+            }
+            .route-list a {
+                color: var(--accent);
+            }
+            .release-note {
+                padding: 24px;
+                border: 1px solid var(--line);
+                background: var(--surface);
+                border-radius: 6px;
+                font-size: 13px;
+                margin-top: 26px;
+            }
+            .release-note p {
+                margin: 0;
+            }
+            .bottom-callout {
+                padding: 48px 0;
+                border-top: 1px solid var(--line);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 24px;
+            }
+            .bottom-callout h2 {
+                font-size: 30px;
+            }
+            .bottom-callout .actions {
+                margin: 0;
+            }
+            footer {
+                border-top: 1px solid var(--line);
+                padding: 28px 0 48px;
+                color: var(--muted);
+                font-size: 12px;
+            }
+            .footer-row {
+                display: flex;
+                justify-content: space-between;
+                gap: 24px;
+                align-items: center;
+            }
+            .footer-links {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 24px;
+            }
+            footer a:hover {
+                color: var(--accent);
+            }
+            #tweaks-toggle {
+                position: fixed;
+                right: 22px;
+                bottom: 22px;
+                z-index: 7;
+                background: var(--surface);
+                box-shadow: 0 4px 24px #0003;
+            }
+            #tweaks {
+                position: fixed;
+                right: 22px;
+                bottom: 78px;
+                width: 260px;
+                padding: 22px;
+                background: var(--surface);
+                border: 1px solid var(--line);
+                border-radius: 7px;
+                z-index: 7;
+                box-shadow: 0 12px 48px #0005;
+            }
+            #tweaks h3 {
+                font: 14px var(--mono);
+                margin: 0 0 16px;
+            }
+            .swatches {
+                display: flex;
+                gap: 9px;
+                margin: 10px 0 18px;
+            }
+            .swatch {
+                height: 34px;
+                width: 40px;
+                border: 2px solid transparent;
+                border-radius: 4px;
+                background: var(--swatch);
+            }
+            .swatch[aria-pressed="true"] {
+                outline: 1px solid var(--fg);
+                outline-offset: 3px;
+            }
+            .motion-control {
+                display: flex;
+                justify-content: space-between;
+                font-size: 13px;
+            }
+            .motion-control input {
+                accent-color: var(--accent);
+                width: 18px;
+                height: 18px;
+            }
+            .reveal {
+                opacity: 0;
+                transform: translateY(12px);
+                transition:
+                    opacity 0.6s,
+                    transform 0.6s;
+            }
+            .reveal.visible {
+                opacity: 1;
+                transform: none;
+            }
+            html[data-motion="off"] *,
+            html[data-motion="off"] *:before,
+            html[data-motion="off"] *:after {
+                animation: none !important;
+                transition: none !important;
+                scroll-behavior: auto !important;
+            }
+            html[data-motion="off"] .reveal {
+                opacity: 1;
+                transform: none;
+            }
+            @media (max-width: 1020px) {
+                .wrap {
+                    padding: 0 28px;
+                }
+                .hero {
+                    gap: 32px;
+                    padding-top: 70px;
+                }
+                .nav-links {
+                    gap: 18px;
+                }
+                .nav-links .secondary-nav {
+                    display: none;
+                }
+                .features {
+                    gap: 36px;
+                }
+                .flow-step {
+                    padding: 24px 12px;
+                }
+                .tree-layout {
+                    gap: 32px;
+                }
+            }
+            @media (max-width: 760px) {
+                .wrap {
+                    padding: 0 22px;
+                }
+                .nav {
+                    min-height: 72px;
+                    gap: 12px;
+                }
+                .brand {
+                    font-size: 14px;
+                }
+                .nav-links {
+                    gap: 10px;
+                }
+                .nav-links a {
+                    display: none;
+                }
+                .hero {
+                    grid-template-columns: 1fr;
+                    gap: 40px;
+                    padding: 58px 0 40px;
+                }
+                h1 {
+                    font-size: 44px;
+                }
+                .eyebrow {
+                    margin-bottom: 24px;
+                }
+                .hero .intro {
+                    font-size: 16px;
+                }
+                .terminal-body {
+                    padding: 20px;
+                }
+                .meta-strip {
+                    grid-template-columns: 1fr 1fr;
+                    margin-bottom: 68px;
+                }
+                .meta-strip > div {
+                    padding: 18px 0;
+                }
+                .meta-strip > div:nth-child(3) {
+                    padding-left: 0;
+                    border-left: 0;
+                    border-top: 1px solid var(--line);
+                }
+                .meta-strip > div:nth-child(4) {
+                    border-top: 1px solid var(--line);
+                }
+                .meta-strip > div + div {
+                    padding-left: 20px;
+                }
+                .section-head {
+                    align-items: flex-start;
+                    flex-direction: column;
+                    gap: 20px;
+                }
+                .flow {
+                    grid-template-columns: 1fr;
+                }
+                .flow-step {
+                    display: grid;
+                    grid-template-columns: 28px 1fr;
+                    padding: 20px 14px;
+                    gap: 0 12px;
+                }
+                .flow-step b {
+                    grid-row: 1/3;
+                    margin: 3px 0 0;
+                }
+                .flow-step + div {
+                    border-left: 0;
+                    border-top: 1px solid var(--line);
+                }
+                .flow-step small {
+                    grid-column: 2;
+                }
+                .features,
+                .install-layout,
+                .tree-layout {
+                    grid-template-columns: 1fr;
+                    gap: 32px;
+                }
+                section {
+                    padding-bottom: 68px;
+                }
+                .comparison {
+                    font-size: 12px;
+                    table-layout: fixed;
+                }
+                .comparison td {
+                    padding: 18px 10px 18px 0;
+                    overflow-wrap: anywhere;
+                    line-height: 1.7;
+                }
+                .comparison th {
+                    padding-right: 8px;
+                    font-size: 10px;
+                }
+                .shot {
+                    margin: 24px 0 0;
+                }
+                .shot img {
+                    max-height: none;
+                }
+                .bottom-callout {
+                    align-items: flex-start;
+                    flex-direction: column;
+                }
+                .footer-row {
+                    align-items: flex-start;
+                    flex-direction: column;
+                }
+                .footer-links {
+                    gap: 16px;
+                }
+                footer {
+                    padding-bottom: 95px;
+                }
+                #tweaks-toggle {
+                    right: 15px;
+                    bottom: 15px;
+                }
+                #tweaks {
+                    right: 15px;
+                    bottom: 72px;
+                }
+                .code-panel pre {
+                    font-size: 12px;
+                    padding: 18px;
+                }
+                .terminal-foot {
+                    font-size: 9px;
+                }
+                .tree-layout h3 {
+                    font-size: 22px;
+                }
+                .feature-list article {
+                    grid-template-columns: 32px 1fr;
+                }
+            }
+            @media (prefers-reduced-motion: reduce) {
+                html {
+                    scroll-behavior: auto;
+                }
+                *,
+                *:before,
+                *:after {
+                    animation: none !important;
+                    transition: none !important;
+                }
+                .reveal {
+                    opacity: 1;
+                    transform: none;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <a href="#main" class="skip"
+            ><span data-zh="跳到主要内容" data-en="Skip to content"
+                >跳到主要内容</span
+            ></a
+        >
+        <div class="ambient" aria-hidden="true"><div class="glow"></div></div>
+        <header>
+            <div class="wrap nav">
+                <a href="#" class="brand"
+                    ><span class="brand-mark">&gt;_</span>agent-entry<span
+                        style="color: var(--muted)"
+                        >.cli</span
+                    ></a
+                >
+                <nav class="nav-links" aria-label="Main">
+                    <a href="#flow"
+                        ><span data-zh="执行流程" data-en="How it works"
+                            >执行流程</span
+                        ></a
+                    ><a href="#features" class="secondary-nav"
+                        ><span data-zh="能力与边界" data-en="Capabilities"
+                            >能力与边界</span
+                        ></a
+                    ><a href="#start"
+                        ><span data-zh="开始接入" data-en="Get started"
+                            >开始接入</span
+                        ></a
+                    ><button
+                        id="language"
+                        class="small-button"
+                        type="button"
+                        data-aria-zh="切换为英文"
+                        data-aria-en="Switch to Chinese"
+                    >
+                        <span data-zh="EN" data-en="中文">EN</span>
+                    </button>
+                </nav>
+            </div>
+        </header>
+        <main id="main" class="wrap">
+            <div class="hero">
+                <div>
+                    <div class="eyebrow">
+                        <span class="dot"></span
+                        ><span>PYTHON / AGENT RUNTIME</span
+                        ><span>ALPHA 0.1.0</span>
+                    </div>
+                    <h1>
+                        <span
+                            data-zh="让业务拥有自己的 Agent 入口。"
+                            data-en="An agent entry point for your business."
+                            >让业务拥有自己的 Agent 入口。</span
+                        >
+                    </h1>
+                    <p class="intro">
+                        <span
+                            data-zh="将已有 Python 服务接成可对话的工具。终端、上下文与取消由库处理，业务与权限仍由项目掌握。"
+                            data-en="Turn existing Python services into conversational tools. Reuse the terminal, context and cancellation; keep business logic and permissions in your project."
+                            >将已有 Python
+                            服务接成可对话的工具。终端、上下文与取消由库处理，业务与权限仍由项目掌握。</span
+                        >
+                    </p>
+                    <div class="actions">
+                        <a href="#start" class="button primary"
+                            ><span
+                                data-zh="接入你的项目"
+                                data-en="Integrate your project"
+                                >接入你的项目</span
+                            ><span aria-hidden="true">↗</span></a
+                        ><a href="README.md" class="button"
+                            ><span
+                                data-zh="阅读中文文档"
+                                data-en="Read the Chinese docs"
+                                >阅读中文文档</span
+                            ><span aria-hidden="true">→</span></a
+                        >
+                    </div>
+                    <p class="subnote">
+                        <span
+                            data-zh="本地源码可用 · 未发布到 PyPI · 无内置 shell 工具"
+                            data-en="Local source available · Not on PyPI · No built-in shell tool"
+                            >本地源码可用 · 未发布到 PyPI · 无内置 shell
+                            工具</span
+                        >
+                    </p>
+                </div>
+                <div class="terminal">
+                    <div class="terminal-bar">
+                        <i></i><i></i><i></i
+                        ><span>agent-entry — local source</span>
+                    </div>
+                    <div class="terminal-body">
+                        <pre
+                            id="hero-terminal"
+                            aria-label="CLI usage demonstration"
+                        ></pre>
+                        <span class="cursor" aria-hidden="true"></span>
+                    </div>
+                    <div class="terminal-foot">
+                        <span
+                            ><span
+                                data-zh="命令演示 · 不执行请求"
+                                data-en="Usage demo · no requests executed"
+                                >命令演示 · 不执行请求</span
+                            ></span
+                        ><time id="clock" aria-label="Local time"></time>
+                    </div>
+                </div>
+            </div>
+            <div class="meta-strip">
+                <div>
+                    <span class="meta-label">RUNTIME</span
+                    ><span class="meta-value">Python 3.13+</span>
+                </div>
+                <div>
+                    <span class="meta-label">CORE LOOP</span
+                    ><span class="meta-value">Agents SDK 0.22.x</span>
+                </div>
+                <div>
+                    <span class="meta-label">LICENSE</span
+                    ><span class="meta-value">MIT</span>
+                </div>
+                <div>
+                    <span class="meta-label">EXECUTION</span
+                    ><span class="meta-value"
+                        ><span data-zh="按需启动" data-en="On demand"
+                            >按需启动</span
+                        ></span
+                    >
+                </div>
+            </div>
+            <section id="flow" class="reveal">
+                <div class="section-head">
+                    <div>
+                        <span class="kicker">01 / THE EXECUTION PATH</span>
+                        <h2>
+                            <span
+                                data-zh="一个循环，各自负责。"
+                                data-en="One loop. Clear ownership."
+                                >一个循环，各自负责。</span
+                            >
+                        </h2>
+                    </div>
+                    <p>
+                        <span
+                            data-zh="SDK 驱动唯一的模型与工具循环。Runtime 管理准入、预算与清理，项目逐次判断业务权限。"
+                            data-en="The SDK owns the model–tool loop. Runtime manages admission, budgets and cleanup; the project checks permissions on every call."
+                            >SDK 驱动唯一的模型与工具循环。Runtime
+                            管理准入、预算与清理，项目逐次判断业务权限。</span
+                        >
+                    </p>
+                </div>
+                <div class="flow">
+                    <div class="flow-step active" data-step="0">
+                        <b>01</b
+                        ><strong
+                            ><span data-zh="项目绑定" data-en="Bind project"
+                                >项目绑定</span
+                            ></strong
+                        ><small
+                            ><span
+                                data-zh="显式选择 Project 与可信插件"
+                                data-en="Explicit Project and trusted plugin"
+                                >显式选择 Project 与可信插件</span
+                            ></small
+                        >
+                    </div>
+                    <div class="flow-step" data-step="1">
+                        <b>02</b
+                        ><strong
+                            ><span data-zh="上下文准入" data-en="Admit context"
+                                >上下文准入</span
+                            ></strong
+                        ><small
+                            ><span
+                                data-zh="检查窗口、历史、schema 与预留"
+                                data-en="Check window, history, schema and reserves"
+                                >检查窗口、历史、schema 与预留</span
+                            ></small
+                        >
+                    </div>
+                    <div class="flow-step" data-step="2">
+                        <b>03</b
+                        ><strong
+                            ><span data-zh="模型循环" data-en="Run SDK loop"
+                                >模型循环</span
+                            ></strong
+                        ><small
+                            ><span
+                                data-zh="模型与工具往返使用同一循环"
+                                data-en="A single loop for model and tool calls"
+                                >模型与工具往返使用同一循环</span
+                            ></small
+                        >
+                    </div>
+                    <div class="flow-step" data-step="3">
+                        <b>04</b
+                        ><strong
+                            ><span data-zh="项目授权" data-en="Authorize tools"
+                                >项目授权</span
+                            ></strong
+                        ><small
+                            ><span
+                                data-zh="逐次检查；写操作默认拒绝"
+                                data-en="Check every call; deny writes by default"
+                                >逐次检查；写操作默认拒绝</span
+                            ></small
+                        >
+                    </div>
+                    <div class="flow-step" data-step="4">
+                        <b>05</b
+                        ><strong
+                            ><span
+                                data-zh="清理与返回"
+                                data-en="Settle and return"
+                                >清理与返回</span
+                            ></strong
+                        ><small
+                            ><span
+                                data-zh="取消收尾，返回状态与元数据"
+                                data-en="Clean up cancellation, return status and metadata"
+                                >取消收尾，返回状态与元数据</span
+                            ></small
+                        >
+                    </div>
+                </div>
+                <p class="caption">
+                    <span
+                        data-zh="流程高亮用于解释执行路径，不代表正在运行 Agent。未知写结果由项目核实，不自动重放。"
+                        data-en="The highlight explains the execution path; it is not a live agent run. The project verifies unknown write outcomes; writes are never automatically replayed."
+                        >流程高亮用于解释执行路径，不代表正在运行
+                        Agent。未知写结果由项目核实，不自动重放。</span
+                    >
+                </p>
+            </section>
+            <section class="reveal">
+                <div class="section-head">
+                    <div>
+                        <span class="kicker">02 / WHY A SEPARATE ENTRY</span>
+                        <h2>
+                            <span
+                                data-zh="业务已经有了，入口可以复用。"
+                                data-en="You own the business. Reuse the entry."
+                                >业务已经有了，入口可以复用。</span
+                            >
+                        </h2>
+                    </div>
+                    <p>
+                        <span
+                            data-zh="适合已有 Python 服务的业务助手。开发代码、修改文件等需求，可直接选择成熟的编程 Agent。"
+                            data-en="For domain assistants built on existing Python services. For coding and file edits, evaluate established coding agents."
+                            >适合已有 Python
+                            服务的业务助手。开发代码、修改文件等需求，可直接选择成熟的编程
+                            Agent。</span
+                        >
+                    </p>
+                </div>
+                <table class="comparison">
+                    <thead>
+                        <tr>
+                            <th data-zh="接入工作" data-en="Integration task">
+                                接入工作
+                            </th>
+                            <th
+                                data-zh="项目重复实现"
+                                data-en="Repeated project work"
+                            >
+                                项目重复实现
+                            </th>
+                            <th
+                                data-zh="本库的分工"
+                                data-en="With this library"
+                            >
+                                本库的分工
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td
+                                data-zh="连续交互"
+                                data-en="Continuous interaction"
+                            >
+                                连续交互
+                            </td>
+                            <td
+                                data-zh="输入、输出、停止与消息队列"
+                                data-en="Input, output, stopping and queues"
+                            >
+                                输入、输出、停止与消息队列
+                            </td>
+                            <td
+                                data-zh="复用终端与取消收尾"
+                                data-en="Reuse terminal and cancellation cleanup"
+                            >
+                                复用终端与取消收尾
+                            </td>
+                        </tr>
+                        <tr>
+                            <td data-zh="业务执行" data-en="Business execution">
+                                业务执行
+                            </td>
+                            <td
+                                data-zh="服务调用和访问权限"
+                                data-en="Service calls and access control"
+                            >
+                                服务调用和访问权限
+                            </td>
+                            <td
+                                data-zh="项目提供 Tool 与 authorize"
+                                data-en="Project supplies Tool and authorize"
+                            >
+                                项目提供 Tool 与 authorize
+                            </td>
+                        </tr>
+                        <tr>
+                            <td
+                                data-zh="上下文管理"
+                                data-en="Context management"
+                            >
+                                上下文管理
+                            </td>
+                            <td
+                                data-zh="窗口、摘要、保存与恢复"
+                                data-en="Windows, summaries, save and restore"
+                            >
+                                窗口、摘要、保存与恢复
+                            </td>
+                            <td
+                                data-zh="统一检查，显式保存摘要"
+                                data-en="Shared admission, explicit summary save"
+                            >
+                                统一检查，显式保存摘要
+                            </td>
+                        </tr>
+                        <tr>
+                            <td
+                                data-zh="执行排查"
+                                data-en="Execution inspection"
+                            >
+                                执行排查
+                            </td>
+                            <td
+                                data-zh="阶段、循环次数和用量缺口"
+                                data-en="Stages, calls and missing usage"
+                            >
+                                阶段、循环次数和用量缺口
+                            </td>
+                            <td
+                                data-zh="执行 ID 与安全元数据回调"
+                                data-en="Execution IDs and safe metadata callbacks"
+                            >
+                                执行 ID 与安全元数据回调
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+            <section id="features" class="reveal features">
+                <div>
+                    <span class="kicker"
+                        >03 / SMALL SURFACE, EXPLICIT BEHAVIOR</span
+                    >
+                    <h2>
+                        <span
+                            data-zh="接得进去，边界也看得见。"
+                            data-en="Easy to connect. Explicit at the edges."
+                            >接得进去，边界也看得见。</span
+                        >
+                    </h2>
+                    <p style="margin-top: 24px">
+                        <span
+                            data-zh="Alpha 阶段，API 保持小而明确。插件是可信的本地代码，不是操作系统沙箱。"
+                            data-en="An alpha with a small, explicit API. Plugins are trusted local code, not an operating-system sandbox."
+                            >Alpha 阶段，API
+                            保持小而明确。插件是可信的本地代码，不是操作系统沙箱。</span
+                        >
+                    </p>
+                    <figure class="shot">
+                        <img
+                            alt="Agent Entry CLI 的真实上下文诊断输出"
+                            data-alt-zh="Agent Entry CLI 的真实上下文诊断输出"
+                            data-alt-en="Actual Agent Entry CLI context diagnostics output"
+                            src="data:image/svg+xml;base64,PHN2ZyBjbGFzcz0icmljaC10ZXJtaW5hbCIgdmlld0JveD0iMCAwIDEyMzggMTcyLjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgICA8IS0tIEdlbmVyYXRlZCB3aXRoIFJpY2ggaHR0cHM6Ly93d3cudGV4dHVhbGl6ZS5pbyAtLT4KICAgIDxzdHlsZT4KCiAgICBAZm9udC1mYWNlIHsKICAgICAgICBmb250LWZhbWlseTogIkZpcmEgQ29kZSI7CiAgICAgICAgc3JjOiBsb2NhbCgiRmlyYUNvZGUtUmVndWxhciIpLAogICAgICAgICAgICAgICAgdXJsKCJodHRwczovL2NkbmpzLmNsb3VkZmxhcmUuY29tL2FqYXgvbGlicy9maXJhY29kZS82LjIuMC93b2ZmMi9GaXJhQ29kZS1SZWd1bGFyLndvZmYyIikgZm9ybWF0KCJ3b2ZmMiIpLAogICAgICAgICAgICAgICAgdXJsKCJodHRwczovL2NkbmpzLmNsb3VkZmxhcmUuY29tL2FqYXgvbGlicy9maXJhY29kZS82LjIuMC93b2ZmL0ZpcmFDb2RlLVJlZ3VsYXIud29mZiIpIGZvcm1hdCgid29mZiIpOwogICAgICAgIGZvbnQtc3R5bGU6IG5vcm1hbDsKICAgICAgICBmb250LXdlaWdodDogNDAwOwogICAgfQogICAgQGZvbnQtZmFjZSB7CiAgICAgICAgZm9udC1mYW1pbHk6ICJGaXJhIENvZGUiOwogICAgICAgIHNyYzogbG9jYWwoIkZpcmFDb2RlLUJvbGQiKSwKICAgICAgICAgICAgICAgIHVybCgiaHR0cHM6Ly9jZG5qcy5jbG91ZGZsYXJlLmNvbS9hamF4L2xpYnMvZmlyYWNvZGUvNi4yLjAvd29mZjIvRmlyYUNvZGUtQm9sZC53b2ZmMiIpIGZvcm1hdCgid29mZjIiKSwKICAgICAgICAgICAgICAgIHVybCgiaHR0cHM6Ly9jZG5qcy5jbG91ZGZsYXJlLmNvbS9hamF4L2xpYnMvZmlyYWNvZGUvNi4yLjAvd29mZi9GaXJhQ29kZS1Cb2xkLndvZmYiKSBmb3JtYXQoIndvZmYiKTsKICAgICAgICBmb250LXN0eWxlOiBib2xkOwogICAgICAgIGZvbnQtd2VpZ2h0OiA3MDA7CiAgICB9CgogICAgLnRlcm1pbmFsLTM4ODkwNTU2MzQtbWF0cml4IHsKICAgICAgICBmb250LWZhbWlseTogRmlyYSBDb2RlLCBtb25vc3BhY2U7CiAgICAgICAgZm9udC1zaXplOiAyMHB4OwogICAgICAgIGxpbmUtaGVpZ2h0OiAyNC40cHg7CiAgICAgICAgZm9udC12YXJpYW50LWVhc3QtYXNpYW46IGZ1bGwtd2lkdGg7CiAgICB9CgogICAgLnRlcm1pbmFsLTM4ODkwNTU2MzQtdGl0bGUgewogICAgICAgIGZvbnQtc2l6ZTogMThweDsKICAgICAgICBmb250LXdlaWdodDogYm9sZDsKICAgICAgICBmb250LWZhbWlseTogYXJpYWw7CiAgICB9CgogICAgLnRlcm1pbmFsLTM4ODkwNTU2MzQtcjEgeyBmaWxsOiAjYzVjOGM2IH0KICAgIDwvc3R5bGU+CgogICAgPGRlZnM+CiAgICA8Y2xpcFBhdGggaWQ9InRlcm1pbmFsLTM4ODkwNTU2MzQtY2xpcC10ZXJtaW5hbCI+CiAgICAgIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxMjE5LjAiIGhlaWdodD0iMTIxLjAiIC8+CiAgICA8L2NsaXBQYXRoPgogICAgPGNsaXBQYXRoIGlkPSJ0ZXJtaW5hbC0zODg5MDU1NjM0LWxpbmUtMCI+CiAgICA8cmVjdCB4PSIwIiB5PSIxLjUiIHdpZHRoPSIxMjIwIiBoZWlnaHQ9IjI0LjY1Ii8+CiAgICAgICAgICAgIDwvY2xpcFBhdGg+CjxjbGlwUGF0aCBpZD0idGVybWluYWwtMzg4OTA1NTYzNC1saW5lLTEiPgogICAgPHJlY3QgeD0iMCIgeT0iMjUuOSIgd2lkdGg9IjEyMjAiIGhlaWdodD0iMjQuNjUiLz4KICAgICAgICAgICAgPC9jbGlwUGF0aD4KPGNsaXBQYXRoIGlkPSJ0ZXJtaW5hbC0zODg5MDU1NjM0LWxpbmUtMiI+CiAgICA8cmVjdCB4PSIwIiB5PSI1MC4zIiB3aWR0aD0iMTIyMCIgaGVpZ2h0PSIyNC42NSIvPgogICAgICAgICAgICA8L2NsaXBQYXRoPgo8Y2xpcFBhdGggaWQ9InRlcm1pbmFsLTM4ODkwNTU2MzQtbGluZS0zIj4KICAgIDxyZWN0IHg9IjAiIHk9Ijc0LjciIHdpZHRoPSIxMjIwIiBoZWlnaHQ9IjI0LjY1Ii8+CiAgICAgICAgICAgIDwvY2xpcFBhdGg+CiAgICA8L2RlZnM+CgogICAgPHJlY3QgZmlsbD0iIzI5MjkyOSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMzUpIiBzdHJva2Utd2lkdGg9IjEiIHg9IjEiIHk9IjEiIHdpZHRoPSIxMjM2IiBoZWlnaHQ9IjE3MCIgcng9IjgiLz48dGV4dCBjbGFzcz0idGVybWluYWwtMzg4OTA1NTYzNC10aXRsZSIgZmlsbD0iI2M1YzhjNiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNjE4IiB5PSIyNyI+5LiK5LiL5paH6K+K5patJiMxNjA7wrcmIzE2MDvmnKzlnLDlkb3ku6TvvIzkuI3osIPnlKjmqKHlnos8L3RleHQ+CiAgICAgICAgICAgIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDI2LDIyKSI+CiAgICAgICAgICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSI3IiBmaWxsPSIjZmY1ZjU3Ii8+CiAgICAgICAgICAgIDxjaXJjbGUgY3g9IjIyIiBjeT0iMCIgcj0iNyIgZmlsbD0iI2ZlYmMyZSIvPgogICAgICAgICAgICA8Y2lyY2xlIGN4PSI0NCIgY3k9IjAiIHI9IjciIGZpbGw9IiMyOGM4NDAiLz4KICAgICAgICAgICAgPC9nPgoKICAgIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDksIDQxKSIgY2xpcC1wYXRoPSJ1cmwoI3Rlcm1pbmFsLTM4ODkwNTU2MzQtY2xpcC10ZXJtaW5hbCkiPgoKICAgIDxnIGNsYXNzPSJ0ZXJtaW5hbC0zODg5MDU1NjM0LW1hdHJpeCI+CiAgICA8dGV4dCBjbGFzcz0idGVybWluYWwtMzg4OTA1NTYzNC1yMSIgeD0iMCIgeT0iMjAiIHRleHRMZW5ndGg9IjQxNC44IiBjbGlwLXBhdGg9InVybCgjdGVybWluYWwtMzg4OTA1NTYzNC1saW5lLTApIj7kuIrkuIvmlofnqpflj6PvvJo2NTUzNu+8m+W3suaPkOS6pOS4iuS4i+aWh+eahOivt+axguS8sOeul++8mjEwN++8iOS4jeWQq+aWsOi+k+WFpe+8iTwvdGV4dD48dGV4dCBjbGFzcz0idGVybWluYWwtMzg4OTA1NTYzNC1yMSIgeD0iMTIyMCIgeT0iMjAiIHRleHRMZW5ndGg9IjEyLjIiIGNsaXAtcGF0aD0idXJsKCN0ZXJtaW5hbC0zODg5MDU1NjM0LWxpbmUtMCkiPgo8L3RleHQ+PHRleHQgY2xhc3M9InRlcm1pbmFsLTM4ODkwNTU2MzQtcjEiIHg9IjAiIHk9IjQ0LjQiIHRleHRMZW5ndGg9IjM0MS42IiBjbGlwLXBhdGg9InVybCgjdGVybWluYWwtMzg4OTA1NTYzNC1saW5lLTEpIj7ljoblj7LkuI7mkZjopoHvvJozMO+8m+mhueebruaMh+S7pO+8mjcy77yb5bel5YW3JiMxNjA7c2NoZW1h77yaMjwvdGV4dD48dGV4dCBjbGFzcz0idGVybWluYWwtMzg4OTA1NTYzNC1yMSIgeD0iMTIyMCIgeT0iNDQuNCIgdGV4dExlbmd0aD0iMTIuMiIgY2xpcC1wYXRoPSJ1cmwoI3Rlcm1pbmFsLTM4ODkwNTU2MzQtbGluZS0xKSI+CjwvdGV4dD48dGV4dCBjbGFzcz0idGVybWluYWwtMzg4OTA1NTYzNC1yMSIgeD0iMCIgeT0iNjguOCIgdGV4dExlbmd0aD0iMzY2IiBjbGlwLXBhdGg9InVybCgjdGVybWluYWwtMzg4OTA1NTYzNC1saW5lLTIpIj7ovpPlh7rpooTnlZnvvJo0MDk277yb57O757uf6aKE55WZ77yaODE5Mu+8m+WJqeS9meS8sOeul++8mjUzMTQxPC90ZXh0Pjx0ZXh0IGNsYXNzPSJ0ZXJtaW5hbC0zODg5MDU1NjM0LXIxIiB4PSIxMjIwIiB5PSI2OC44IiB0ZXh0TGVuZ3RoPSIxMi4yIiBjbGlwLXBhdGg9InVybCgjdGVybWluYWwtMzg4OTA1NTYzNC1saW5lLTIpIj4KPC90ZXh0Pjx0ZXh0IGNsYXNzPSJ0ZXJtaW5hbC0zODg5MDU1NjM0LXIxIiB4PSIwIiB5PSI5My4yIiB0ZXh0TGVuZ3RoPSIzMTcuMiIgY2xpcC1wYXRoPSJ1cmwoI3Rlcm1pbmFsLTM4ODkwNTU2MzQtbGluZS0zKSI+5raI5oGv77yaMO+8m+WtmOWcqOaRmOimge+8muWQpu+8m+W3suWOi+e8qe+8mjAmIzE2MDvmrKHvvJvlu7rorq7ljovnvKnvvJrlkKY8L3RleHQ+PHRleHQgY2xhc3M9InRlcm1pbmFsLTM4ODkwNTU2MzQtcjEiIHg9IjEyMjAiIHk9IjkzLjIiIHRleHRMZW5ndGg9IjEyLjIiIGNsaXAtcGF0aD0idXJsKCN0ZXJtaW5hbC0zODg5MDU1NjM0LWxpbmUtMykiPgo8L3RleHQ+PHRleHQgY2xhc3M9InRlcm1pbmFsLTM4ODkwNTU2MzQtcjEiIHg9IjAiIHk9IjExNy42IiB0ZXh0TGVuZ3RoPSI1NDkiIGNsaXAtcGF0aD0idXJsKCN0ZXJtaW5hbC0zODg5MDU1NjM0LWxpbmUtNCkiPuS8sOeul+S+neaNru+8mlVURi04JiMxNjA75a2X6IqC5L+d5a6I5Lyw566X77yM6Z2e5L6b5bqU5ZWGJiMxNjA7dG9rZW5pemVy77yb5q+P5qyh5a6e6ZmF6K+35rGC5LuN5Y2V54us5YeG5YWl44CCPC90ZXh0Pjx0ZXh0IGNsYXNzPSJ0ZXJtaW5hbC0zODg5MDU1NjM0LXIxIiB4PSIxMjIwIiB5PSIxMTcuNiIgdGV4dExlbmd0aD0iMTIuMiIgY2xpcC1wYXRoPSJ1cmwoI3Rlcm1pbmFsLTM4ODkwNTU2MzQtbGluZS00KSI+CjwvdGV4dD4KICAgIDwvZz4KICAgIDwvZz4KPC9zdmc+Cg=="
+                        />
+                        <figcaption>
+                            <span
+                                data-zh="真实 CLI 输出 · 上下文诊断，不调用模型"
+                                data-en="Actual CLI output · context diagnostics, no model call"
+                                >真实 CLI 输出 · 上下文诊断，不调用模型</span
+                            >
+                        </figcaption>
+                    </figure>
+                </div>
+                <div class="feature-list">
+                    <article>
+                        <span class="number">01</span>
+                        <div>
+                            <h3>
+                                <span
+                                    data-zh="异步业务工具"
+                                    data-en="Async domain tools"
+                                    >异步业务工具</span
+                                >
+                            </h3>
+                            <p>
+                                <span
+                                    data-zh="用具名异步函数连接现有 API。写工具每次调用都经过项目授权。"
+                                    data-en="Connect existing APIs through named async functions. Every write invocation passes project authorization."
+                                    >用具名异步函数连接现有
+                                    API。写工具每次调用都经过项目授权。</span
+                                >
+                            </p>
+                        </div>
+                    </article>
+                    <article>
+                        <span class="number">02</span>
+                        <div>
+                            <h3>
+                                <span
+                                    data-zh="上下文与摘要"
+                                    data-en="Context and summaries"
+                                    >上下文与摘要</span
+                                >
+                            </h3>
+                            <p>
+                                <span
+                                    data-zh="指令、schema、历史和预留共同参与窗口估算。只有显式 /save 持久化摘要。"
+                                    data-en="Instructions, schemas, history and reserves count toward admission. Only explicit /save persists a summary."
+                                    >指令、schema、历史和预留共同参与窗口估算。只有显式
+                                    /save 持久化摘要。</span
+                                >
+                            </p>
+                        </div>
+                    </article>
+                    <article>
+                        <span class="number">03</span>
+                        <div>
+                            <h3>
+                                <span
+                                    data-zh="停止与会话控制"
+                                    data-en="Cancellation and session control"
+                                    >停止与会话控制</span
+                                >
+                            </h3>
+                            <p>
+                                <span
+                                    data-zh="流式输出、队列暂停、项目作用域隔离。清理未完成时阻止新轮次。"
+                                    data-en="Streaming output, paused queues and isolated project scopes. Unfinished cleanup blocks another run."
+                                    >流式输出、队列暂停、项目作用域隔离。清理未完成时阻止新轮次。</span
+                                >
+                            </p>
+                        </div>
+                    </article>
+                    <article>
+                        <span class="number">04</span>
+                        <div>
+                            <h3>
+                                <span
+                                    data-zh="安全执行元数据"
+                                    data-en="Safe execution metadata"
+                                    >安全执行元数据</span
+                                >
+                            </h3>
+                            <p>
+                                <span
+                                    data-zh="通过 on_event 接出阶段、耗时与已知／未知用量。私有推理正文不进入界面与默认账本。"
+                                    data-en="Export stages, timing and known or missing usage with on_event. Private reasoning text is excluded from the UI and default ledger."
+                                    >通过 on_event
+                                    接出阶段、耗时与已知／未知用量。私有推理正文不进入界面与默认账本。</span
+                                >
+                            </p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+            <section id="start" class="reveal">
+                <div class="section-head">
+                    <div>
+                        <span class="kicker">04 / GET STARTED</span>
+                        <h2>
+                            <span
+                                data-zh="先接一个只读工具。"
+                                data-en="Start with one read-only tool."
+                                >先接一个只读工具。</span
+                            >
+                        </h2>
+                    </div>
+                    <p>
+                        <span
+                            data-zh="macOS / Linux，Python 3.13+ 与 uv。模型和凭据由你配置；本页不发出模型请求。"
+                            data-en="macOS / Linux, Python 3.13+ and uv. Supply your model and credentials; this page makes no model requests."
+                            >macOS / Linux，Python 3.13+ 与
+                            uv。模型和凭据由你配置；本页不发出模型请求。</span
+                        >
+                    </p>
+                </div>
+                <div class="install-layout">
+                    <div>
+                        <div class="code-panel">
+                            <div class="code-label">
+                                <span>LOCAL CHECKOUT / SHELL</span
+                                ><button
+                                    type="button"
+                                    class="copy"
+                                    id="copy-install"
+                                >
+                                    <span data-zh="复制" data-en="Copy"
+                                        >复制</span
+                                    >
+                                </button>
+                            </div>
+                            <pre id="install-code">
+uv sync --locked --extra dev
+uv run --locked agent-entry --help
+uv run --locked agent-entry --diagnostics</pre
+                            >
+                        </div>
+                        <p class="install-note">
+                            <span
+                                data-zh="在本地源码目录运行。诊断无需凭据；真实对话前设置环境变量中的模型与 API key，CLI 不自动加载 .env。"
+                                data-en="Run in the local checkout. Diagnostics need no credentials. Configure the model and API key through environment variables before live chat; the CLI does not auto-load .env."
+                                >在本地源码目录运行。诊断无需凭据；真实对话前设置环境变量中的模型与
+                                API key，CLI 不自动加载 .env。</span
+                            >
+                        </p>
+                        <div class="code-panel" style="margin-top: 24px">
+                            <div class="code-label">
+                                <span>PROJECT API</span>
+                            </div>
+                            <pre>
+from agent_entry_cli import Project, Tool, run_cli
+
+# existing_api: your named async function
+project = Project(root=project_root,
+                  tools=(Tool(existing_api),))
+run_cli(project)</pre
+                            >
+                        </div>
+                        <p class="install-note">
+                            <span
+                                data-zh="上方 API 片段仅展示接口；完整可运行插件见接入说明。"
+                                data-en="The API fragment illustrates the interface; see the integration guide for a complete runnable plugin."
+                                >上方 API
+                                片段仅展示接口；完整可运行插件见接入说明。</span
+                            >
+                        </p>
+                    </div>
+                    <div class="command-console">
+                        <span class="kicker"
+                            ><span
+                                data-zh="试用命令 · 查看用法"
+                                data-en="EXPLORE COMMANDS · USAGE ONLY"
+                                >试用命令 · 查看用法</span
+                            ></span
+                        >
+                        <div class="chips">
+                            <button
+                                class="chip"
+                                type="button"
+                                data-command="help"
+                                aria-pressed="true"
+                            >
+                                /help</button
+                            ><button
+                                class="chip"
+                                type="button"
+                                data-command="context"
+                                aria-pressed="false"
+                            >
+                                /context</button
+                            ><button
+                                class="chip"
+                                type="button"
+                                data-command="tools"
+                                aria-pressed="false"
+                            >
+                                /tools</button
+                            ><button
+                                class="chip"
+                                type="button"
+                                data-command="stop"
+                                aria-pressed="false"
+                            >
+                                /stop
+                            </button>
+                        </div>
+                        <div
+                            id="command-output"
+                            role="status"
+                            aria-live="polite"
+                        ></div>
+                        <p class="caption" style="margin: 22px 0 0">
+                            <span
+                                data-zh="这里展示命令含义，不模拟终端状态，也不执行工具。"
+                                data-en="This panel explains commands. It does not simulate terminal state or execute tools."
+                                >这里展示命令含义，不模拟终端状态，也不执行工具。</span
+                            >
+                        </p>
+                        <a
+                            class="button"
+                            style="margin-top: 20px"
+                            href="docs/terminal.md"
+                            ><span
+                                data-zh="打开终端操作手册"
+                                data-en="Open the Chinese terminal manual"
+                                >打开终端操作手册</span
+                            ><span aria-hidden="true">→</span></a
+                        >
+                    </div>
+                </div>
+            </section>
+            <section id="extend" class="reveal">
+                <div class="section-head">
+                    <div>
+                        <span class="kicker">05 / EXTEND YOUR PROJECT</span>
+                        <h2>
+                            <span
+                                data-zh="从业务函数，到项目主助手。"
+                                data-en="From a domain function to your main assistant."
+                                >从业务函数，到项目主助手。</span
+                            >
+                        </h2>
+                    </div>
+                    <p>
+                        <span
+                            data-zh="业务适配留在项目里；只有多个项目都需要的通用能力，才进入公共库。"
+                            data-en="Keep business adapters in your project. Promote only broadly reusable capabilities into the library."
+                            >业务适配留在项目里；只有多个项目都需要的通用能力，才进入公共库。</span
+                        >
+                    </p>
+                </div>
+                <div class="tree-layout">
+                    <div id="tree">
+                        <div style="color: var(--fg); margin-bottom: 12px">
+                            agent-entry-cli/
+                        </div>
+                        <details>
+                            <summary>src/agent_entry_cli/</summary>
+                            <div class="children">
+                                <span class="leaf"
+                                    >project.py · Project / Tool /
+                                    ToolCall</span
+                                ><span class="leaf">runtime.py · Runtime</span
+                                ><span class="leaf"
+                                    >terminal.py · terminal interface</span
+                                ><span class="leaf"
+                                    >conversation.py · context / summary</span
+                                >
+                            </div>
+                        </details>
+                        <details>
+                            <summary>examples/</summary>
+                            <div class="children">
+                                <span class="leaf"
+                                    >knowledge/ · read-only notes</span
+                                ><span class="leaf"
+                                    >eval-harness/ · optional status
+                                    adapter</span
+                                >
+                            </div>
+                        </details>
+                        <details>
+                            <summary>docs/</summary>
+                            <div class="children">
+                                <span class="leaf">integration.md</span
+                                ><span class="leaf">terminal.md</span
+                                ><span class="leaf">architecture.md</span>
+                            </div>
+                        </details>
+                        <details>
+                            <summary>scripts/</summary>
+                            <div class="children">
+                                <span class="leaf">check_release.py</span
+                                ><span class="leaf">verify_distribution.py</span
+                                ><span class="leaf">verify_site.mjs</span>
+                            </div>
+                        </details>
+                        <span class="root-file">index.html</span
+                        ><span class="root-file">pyproject.toml / uv.lock</span>
+                    </div>
+                    <div>
+                        <ol class="route-list">
+                            <li>
+                                <strong
+                                    ><span
+                                        data-zh="01 · 接入业务服务"
+                                        data-en="01 · Connect domain services"
+                                        >01 · 接入业务服务</span
+                                    ></strong
+                                >
+                                <p>
+                                    <span
+                                        data-zh="注册异步 Tool；先核对真实只读范围，再加入受控写授权、幂等和结果核实。"
+                                        data-en="Register async tools. Verify the read scope first; add write authorization, idempotency and outcome checks when needed."
+                                        >注册异步
+                                        Tool；先核对真实只读范围，再加入受控写授权、幂等和结果核实。</span
+                                    >
+                                </p>
+                            </li>
+                            <li>
+                                <strong
+                                    ><span
+                                        data-zh="02 · 复用运行时"
+                                        data-en="02 · Embed the runtime"
+                                        >02 · 复用运行时</span
+                                    ></strong
+                                >
+                                <p>
+                                    <span
+                                        data-zh="用 Runtime 接自有界面或任务服务，项目管理用户身份、会话隔离与取消。"
+                                        data-en="Use Runtime in your UI or task service. Own user identity, session isolation and cancellation."
+                                        >用 Runtime
+                                        接自有界面或任务服务，项目管理用户身份、会话隔离与取消。</span
+                                    >
+                                </p>
+                            </li>
+                            <li>
+                                <strong
+                                    ><span
+                                        data-zh="03 · 接出观测数据"
+                                        data-en="03 · Export observability"
+                                        >03 · 接出观测数据</span
+                                    ></strong
+                                >
+                                <p>
+                                    <span
+                                        data-zh="通过 on_event 接有界队列，由项目导出安全元数据。MCP、Skills、多 Agent 尚未内置。"
+                                        data-en="Feed on_event into a bounded queue and export safe metadata. MCP, Skills and multi-agent scheduling are not built in."
+                                        >通过 on_event
+                                        接有界队列，由项目导出安全元数据。MCP、Skills、多
+                                        Agent 尚未内置。</span
+                                    >
+                                </p>
+                            </li>
+                        </ol>
+                        <a
+                            class="button"
+                            href="docs/integration.md"
+                            style="margin-top: 24px"
+                            ><span
+                                data-zh="接入与扩展指南"
+                                data-en="Integration and extension guide (Chinese)"
+                                >接入与扩展指南</span
+                            ><span aria-hidden="true">↗</span></a
+                        >
+                    </div>
+                </div>
+                <div class="release-note">
+                    <p>
+                        <span
+                            data-zh="发布状态：本地源码与官方页准备中。仓库和 Pages 目标地址尚未部署，未声明已发布到 GitHub 或 PyPI。本项目没有内置定时任务。"
+                            data-en="Release status: local source and official page are being prepared. The repository and Pages target have not been deployed. No GitHub or PyPI release is claimed. The project has no built-in scheduled jobs."
+                            >发布状态：本地源码与官方页准备中。仓库和 Pages
+                            目标地址尚未部署，未声明已发布到 GitHub 或
+                            PyPI。本项目没有内置定时任务。</span
+                        >
+                    </p>
+                </div>
+            </section>
+            <div class="bottom-callout">
+                <div>
+                    <span class="kicker"
+                        >YOUR PROJECT. YOUR TOOLS. YOUR POLICY.</span
+                    >
+                    <h2>
+                        <span
+                            data-zh="把入口接上，把业务留下。"
+                            data-en="Connect the entry. Keep the business yours."
+                            >把入口接上，把业务留下。</span
+                        >
+                    </h2>
+                </div>
+                <div class="actions">
+                    <a class="button primary" href="docs/integration.md"
+                        ><span
+                            data-zh="查看接入步骤"
+                            data-en="Read integration steps"
+                            >查看接入步骤</span
+                        ><span aria-hidden="true">→</span></a
+                    >
+                </div>
+            </div>
+        </main>
+        <footer>
+            <div class="wrap footer-row">
+                <span class="mono">agent-entry-cli / 0.1.0 / MIT</span>
+                <div class="footer-links">
+                    <a href="README.md"
+                        ><span
+                            data-zh="中文完整文档"
+                            data-en="Chinese documentation"
+                            >中文完整文档</span
+                        ></a
+                    ><a href="LICENSE">MIT License</a
+                    ><a href="https://github.com/xsoway"
+                        ><span
+                            data-zh="维护者 GitHub"
+                            data-en="Maintainer on GitHub"
+                            >维护者 GitHub</span
+                        ></a
+                    ><a href="RELEASE_CHECKLIST.md"
+                        ><span
+                            data-zh="发布检查"
+                            data-en="Release checklist (Chinese)"
+                            >发布检查</span
+                        ></a
+                    >
+                </div>
+            </div>
+        </footer>
+        <button
+            class="small-button"
+            id="tweaks-toggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="tweaks"
+        >
+            Tweaks
+        </button>
+        <aside id="tweaks" hidden>
+            <h3>Tweaks</h3>
+            <div data-zh="强调色" data-en="Accent">强调色</div>
+            <div class="swatches">
+                <button
+                    type="button"
+                    class="swatch"
+                    data-accent="gold"
+                    style="--swatch: #d79921"
+                    aria-label="Gold"
+                    aria-pressed="true"
+                ></button
+                ><button
+                    type="button"
+                    class="swatch"
+                    data-accent="green"
+                    style="--swatch: #b8bb26"
+                    aria-label="Green"
+                    aria-pressed="false"
+                ></button
+                ><button
+                    type="button"
+                    class="swatch"
+                    data-accent="purple"
+                    style="--swatch: #d3869b"
+                    aria-label="Purple"
+                    aria-pressed="false"
+                ></button
+                ><button
+                    type="button"
+                    class="swatch"
+                    data-accent="blue"
+                    style="--swatch: #83a598"
+                    aria-label="Blue"
+                    aria-pressed="false"
+                ></button>
+            </div>
+            <label class="motion-control" for="motion"
+                ><span data-zh="启用动效" data-en="Enable motion">启用动效</span
+                ><input type="checkbox" id="motion" checked
+            /></label>
+        </aside>
+        <script>
+            const root = document.documentElement;
+            const languageButton = document.querySelector("#language");
+            const motionInput = document.querySelector("#motion");
+            const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+            const terminal = document.querySelector("#hero-terminal");
+            const steps = [...document.querySelectorAll(".flow-step")];
+            let language = "zh";
+            let selectedCommand = "help";
+            let copyState = "idle";
+            let copyTimer;
+            const copyMessages = {
+                idle: { zh: "复制", en: "Copy" },
+                copied: { zh: "已复制", en: "Copied" },
+                selected: {
+                    zh: "已选中，请复制",
+                    en: "Selected; copy manually",
+                },
+            };
+            function renderCopyFeedback() {
+                const node = document.querySelector("#copy-install span");
+                node.dataset.zh = copyMessages[copyState].zh;
+                node.dataset.en = copyMessages[copyState].en;
+                node.textContent = copyMessages[copyState][language];
+            }
+            let typingTimer;
+            let flowTimer;
+            let step = 0;
+            const commands = {
+                help: {
+                    zh: "/help — 列出内置控制命令和项目注册的本地命令。使用 /tools 查看模型可调用的工具。",
+                    en: "/help — List built-in controls and registered local commands. Use /tools to inspect tools available to the model.",
+                },
+                context: {
+                    zh: "/context — 查看窗口、指令、工具 schema、历史及预留的占用估算。UTF-8 字节估算不等于供应商 tokenizer，也不代表准确计费。",
+                    en: "/context — Inspect window estimates for instructions, tool schemas, history and reserves. UTF-8 byte estimates are not the provider tokenizer or exact billing.",
+                },
+                tools: {
+                    zh: "/tools — 查看显式注册的工具及读写声明。工具声明不是沙箱；配置授权策略后，每次读写调用都检查项目策略。",
+                    en: "/tools — Inspect registered tools and declared side effects. Declarations are not a sandbox. A configured project policy checks every read and write invocation.",
+                },
+                stop: {
+                    zh: "/stop — 请求取消当前执行并等待清理。失败或取消会暂停后续队列；未知写结果由项目核实，不自动重放。",
+                    en: "/stop — Request cancellation and wait for cleanup. Failure or cancellation pauses the queue. The project checks unknown write outcomes; writes are not replayed automatically.",
+                },
+            };
+            function renderCommand() {
+                document.querySelector("#command-output").textContent =
+                    commands[selectedCommand][language];
+            }
+            function renderTerminal() {
+                clearTimeout(typingTimer);
+                const note =
+                    language === "zh"
+                        ? "# 在本地源码目录运行"
+                        : "# Run in the local checkout";
+                const text = `${note}\n$ uv sync --locked --extra dev\n$ uv run --locked agent-entry --version\nagent-entry-cli 0.1.0\n$ uv run --locked agent-entry --help`;
+                terminal.textContent = "";
+                if (root.dataset.motion === "off") {
+                    terminal.textContent = text;
+                    return;
+                }
+                let n = 0;
+                const tick = () => {
+                    n += 2;
+                    terminal.textContent = text.slice(0, n);
+                    if (n < text.length) typingTimer = setTimeout(tick, 28);
+                };
+                tick();
+            }
+            function applyLanguage() {
+                root.lang = language === "zh" ? "zh-CN" : "en";
+                document
+                    .querySelectorAll("[data-zh][data-en]")
+                    .forEach((e) => (e.textContent = e.dataset[language]));
+                document
+                    .querySelectorAll("[data-aria-zh]")
+                    .forEach((e) =>
+                        e.setAttribute(
+                            "aria-label",
+                            e.dataset[language === "zh" ? "ariaZh" : "ariaEn"],
+                        ),
+                    );
+                document
+                    .querySelectorAll("[data-alt-zh]")
+                    .forEach(
+                        (e) =>
+                            (e.alt =
+                                e.dataset[
+                                    language === "zh" ? "altZh" : "altEn"
+                                ]),
+                    );
+                document.title =
+                    language === "zh"
+                        ? "Agent Entry CLI · 项目的 Agent 入口"
+                        : "Agent Entry CLI · An entry point for your project";
+                document.querySelector("meta[name=description]").content =
+                    language === "zh"
+                        ? "为现有 Python 项目提供可嵌入的 Agent 终端入口。显式工具、逐次授权与上下文管理。"
+                        : "An embeddable agent terminal for existing Python projects. Explicit tools, per-call authorization and context management.";
+                renderCommand();
+                renderTerminal();
+                renderCopyFeedback();
+            }
+            function setMotion() {
+                const enabled = motionInput.checked && !reduced.matches;
+                root.dataset.motion = enabled ? "on" : "off";
+                clearInterval(flowTimer);
+                if (enabled)
+                    flowTimer = setInterval(() => {
+                        steps[step].classList.remove("active");
+                        step = (step + 1) % steps.length;
+                        steps[step].classList.add("active");
+                    }, 1600);
+                renderTerminal();
+            }
+            languageButton.addEventListener("click", () => {
+                language = language === "zh" ? "en" : "zh";
+                applyLanguage();
+            });
+            document.querySelectorAll("[data-command]").forEach((button) =>
+                button.addEventListener("click", () => {
+                    selectedCommand = button.dataset.command;
+                    document
+                        .querySelectorAll("[data-command]")
+                        .forEach((b) =>
+                            b.setAttribute(
+                                "aria-pressed",
+                                String(b === button),
+                            ),
+                        );
+                    renderCommand();
+                }),
+            );
+            const toggle = document.querySelector("#tweaks-toggle");
+            const tweaks = document.querySelector("#tweaks");
+            toggle.addEventListener("click", () => {
+                tweaks.hidden = !tweaks.hidden;
+                toggle.setAttribute("aria-expanded", String(!tweaks.hidden));
+            });
+            document.addEventListener("keydown", (event) => {
+                if (event.key === "Escape" && !tweaks.hidden) {
+                    tweaks.hidden = true;
+                    toggle.setAttribute("aria-expanded", "false");
+                    toggle.focus();
+                }
+            });
+            const accents = {
+                gold: "#d79921",
+                green: "#b8bb26",
+                purple: "#d3869b",
+                blue: "#83a598",
+            };
+            document.querySelectorAll("[data-accent]").forEach((button) =>
+                button.addEventListener("click", () => {
+                    root.style.setProperty(
+                        "--accent",
+                        accents[button.dataset.accent],
+                    );
+                    document
+                        .querySelectorAll("[data-accent]")
+                        .forEach((b) =>
+                            b.setAttribute(
+                                "aria-pressed",
+                                String(b === button),
+                            ),
+                        );
+                }),
+            );
+            motionInput.checked = !reduced.matches;
+            motionInput.addEventListener("change", setMotion);
+            reduced.addEventListener("change", () => {
+                motionInput.checked = !reduced.matches;
+                setMotion();
+            });
+            const observer = new IntersectionObserver(
+                (entries) =>
+                    entries.forEach((entry) => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add("visible");
+                            observer.unobserve(entry.target);
+                        }
+                    }),
+                { threshold: 0.08 },
+            );
+            document
+                .querySelectorAll(".reveal")
+                .forEach((e) => observer.observe(e));
+            function clock() {
+                document.querySelector("#clock").textContent =
+                    new Date().toLocaleTimeString("en-GB", { hour12: false });
+            }
+            clock();
+            setInterval(clock, 1000);
+            document
+                .querySelector("#copy-install")
+                .addEventListener("click", async () => {
+                    const text =
+                        document.querySelector("#install-code").textContent;
+                    clearTimeout(copyTimer);
+                    try {
+                        await navigator.clipboard.writeText(text);
+                        copyState = "copied";
+                    } catch {
+                        const selection = getSelection();
+                        const range = document.createRange();
+                        range.selectNodeContents(
+                            document.querySelector("#install-code"),
+                        );
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                        copyState = "selected";
+                    }
+                    renderCopyFeedback();
+                    copyTimer = setTimeout(() => {
+                        copyState = "idle";
+                        renderCopyFeedback();
+                    }, 1800);
+                });
+            applyLanguage();
+            setMotion();
+        </script>
+    </body>
+</html>

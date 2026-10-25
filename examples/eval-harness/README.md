@@ -1,15 +1,15 @@
-# Optional evaluation framework integration
+# 可选的评测框架接入
 
-This adapter calls an **already installed** `agent-eval` executable through PATH.
-The independent CLI package does not install or import the evaluation framework.
-Pass an existing evaluation workspace as `--project`:
+此适配器通过 PATH 调用**已经安装**的 `agent-eval` 可执行程序。
+独立 CLI 包不会安装或导入评测框架。
+通过 `--project` 传入已有的评测工作区：
 
 ```bash
 uv run --locked agent-entry --project /path/to/evaluation-workspace --plugin examples/eval-harness/project.py
 ```
 
-The only tool is `workflow_status`: fixed argv `agent-eval status <root> --format json`.
-There is no shell interpolation, dataset release, approval or evaluation execution.
-The old framework's human review and business gates remain authoritative.
-The executable and workspace are trusted local dependencies. This example does
-not attest a real evaluation Target, Golden release or Judge run.
+唯一工具是 `workflow_status`，固定参数为 `agent-eval status <root> --format json`。
+不使用 shell 插值，也不发布数据集、代为审批或执行评测。
+原框架的人工审核和业务门禁仍然有效，并具有最终约束力。
+可执行程序和工作区均属于可信本地依赖。
+本示例不证明已完成真实评测 Target、Golden 发布或 Judge 运行。

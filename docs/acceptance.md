@@ -1,75 +1,64 @@
-# Acceptance — 2026-10-24
+# 验收记录 — 2026-10-24
 
-Local implementation acceptance passed on macOS with Python 3.13.15.
-The repository is an alpha source release prepared locally; no remote release is implied.
+本地实现验收已在 macOS、Python 3.13.15 环境中通过。
+本仓库是在本地准备的 alpha 源码版本，不表示已完成远程发布。
 
-## Deterministic gates
+## 确定性检查
 
-| Gate | Observed result |
+| 检查项 | 观测结果 |
 |---|---|
-| `uv sync --locked --extra dev` | Independent project environment created; no copied/shared venv |
+| `uv sync --locked --extra dev` | 已创建独立项目环境，未复制或共享虚拟环境 |
 | `uv run --locked --extra dev pytest -q` | **39 passed in 3.64s** |
-| `uv run --locked --extra dev ruff check .` | All checks passed |
-| `uv run --locked --extra dev ruff format --check .` | 37 files already formatted, including Markdown examples |
-| `uv run --locked --extra dev pyright` | 0 errors, 0 warnings |
-| `uv build` | Wheel and source distribution built |
-| `uv run --locked --extra dev python scripts/verify_distribution.py` | Independent wheel installation/import, init and diagnostics passed |
-| OpenSpec initial-cli strict validation | Valid |
-| Workspace agent inheritance audit | Passed; standalone checkout does not require absent parent workspace files |
+| `uv run --locked --extra dev ruff check .` | 所有检查通过 |
+| `uv run --locked --extra dev ruff format --check .` | 37 个文件已符合格式要求，包含 Markdown 示例 |
+| `uv run --locked --extra dev pyright` | 0 个错误，0 个警告 |
+| `uv build` | 已构建 Wheel 和源码分发包 |
+| `uv run --locked --extra dev python scripts/verify_distribution.py` | 独立 Wheel 安装与导入、初始化及诊断通过 |
+| OpenSpec initial-cli 严格校验 | 有效 |
+| 工作区 Agent 指令继承审计 | 通过；独立检出的仓库不要求存在上级工作区文件 |
 
-Tests use the real SDK with deterministic model providers. They verify contracts and
-failure behavior; they are not live-provider or business-evaluation evidence.
+测试使用真实 SDK 和确定性模型提供方，验证接口契约与失败行为；这些结果不构成真实模型提供方或业务评测的证据。
 
-## Runtime acceptance
+## 运行时验收
 
-A wheel was installed into a separate uv environment outside the source checkout.
-Its Python imports resolve from that environment and cannot import the old evaluation
-framework. With the existing authorized model environment, the installed wheel passed:
+Wheel 已安装到源码检出目录之外的独立 uv 环境。其 Python 导入解析到该环境，且无法导入旧评测框架。
+在现有已授权模型环境中，已安装的 Wheel 通过了以下检查：
 
-- Real `sglang-deepseek-v4-flash` Chat Completions streaming and positive provider usage.
-- Real registered `search_notes` tool reading sample notes and returning file:line references.
-- Explicit summary save, clear, restore and recall of the sample code/language constraint.
-- Restart into a new process, restore the same scoped summary and recall the constraint.
-- Plain PTY `/stop`, next-turn input queue, pause on cancellation and explicit queue clearing.
-- Enhanced PTY command completion and Esc cancellation; NO_COLOR completion/diagnostics.
-- Metadata readback: no sample chat markers, settled cleanup, no pending writes, real known
-  consumption retained and missing cancellation usage kept unknown.
+- 真实 `sglang-deepseek-v4-flash` Chat Completions 流式调用，以及大于零的模型提供方用量。
+- 真实注册的 `search_notes` 工具读取示例笔记，并返回文件与行号引用。
+- 显式保存摘要、清空、恢复，并回忆示例代码及语言约束。
+- 重启到新进程后恢复同一作用域的摘要，并回忆约束。
+- 普通 PTY 中的 `/stop`、下一轮输入队列、取消后暂停，以及显式清空队列。
+- 增强 PTY 中的命令补全和 Esc 取消，以及 NO_COLOR 下的补全与诊断。
+- 元数据回读：未包含示例聊天标记，清理已完成，无待定写操作，保留真实已知消耗，取消时缺失的用量保持未知。
 
-One provider summary attempt did not satisfy the fixed schema. It was rejected without
-mutating history; a later explicit save succeeded. No tool or write was retried as a result.
-Early PTY harness assertions were corrected for output segmentation and prompt-control
-sequences, then the final scenarios passed. They were not reported as product success.
+一次模型提供方摘要生成未满足固定 schema，系统拒绝了该结果且未修改历史；之后显式保存成功。
+这次失败没有导致任何工具或写操作重试。早期 PTY 验证脚本的断言针对输出分段和提示符控制序列进行了修正，
+随后最终场景通过。早期断言结果未被报告为产品验收成功。
 
-The optional evaluation adapter was checked against the current installed `agent-eval
-status <workspace> --format json` command on an isolated existing sample workspace. It
-returned real Core status and left the project definition unchanged. No approvals,
-Golden release, Target, Judge or evaluation runs were requested.
+可选评测适配器已使用当前安装的 `agent-eval status <workspace> --format json` 命令，
+在隔离的现有示例工作区中检查。它返回了真实 Core 状态，且未修改项目定义。
+未请求审批、Golden 发布、Target、Judge 或评测运行。
 
-## Defect-focused review
+## 缺陷导向审查
 
-An independent read-only review identified budget settlement, same-response unknown-write
-blocking, startup model override and per-turn event-loop lifetime issues. Regression tests
-first failed and then passed after fixes. A dispatch lock now serializes tool calls and
-checks unknown writes and token budget before each invocation. The terminal retains one
-loop and refuses new model turns while previous cleanup is pending.
+一次独立只读审查发现了预算结算、同一响应内未知写操作的阻断、启动模型覆盖以及逐轮事件循环生命周期问题。
+回归测试先失败，修复后通过。现在使用调度锁串行执行工具调用，并在每次调用前检查未知写操作和 token 预算。
+终端保留同一个事件循环；前一次清理尚未完成时，会拒绝发起新的模型轮次。
 
-The implementation pass additionally verified headless control-sequence filtering,
-iterator finalizers, safe fixed failure reasons, the actual evaluation CLI contract and
-subprocess startup cancellation. Each reproducible defect has a regression. The final
-focused source pass found no unresolved release-blocking P0/P1/P2 in the delivered scope.
+本轮实现还验证了无界面模式的控制序列过滤、迭代器终结器、安全的固定失败原因、实际评测 CLI 契约，
+以及子进程启动取消。每个可复现缺陷都有回归覆盖。最终的定向源码审查未在交付范围内发现尚未解决、
+阻碍发布的 P0/P1/P2 问题。
 
-## Limits and unexecuted gates
+## 限制与未执行的检查
 
-- GitHub repository creation, hosted Actions and PyPI publication were not executed.
-- Linux CI is configured, but this local acceptance ran on macOS. Windows is unsupported.
-- The real provider test used Chat Completions; Responses and other vendors need their own
-  real endpoint acceptance before claiming compatibility.
-- Plugins are trusted local async code, not a sandbox. Non-cooperative code can still
-  prevent process shutdown. A cleanup timeout is not proof that external work was undone.
-- Summary redaction is best effort. Checkpoints restore historical usage snapshots,
-  not provider-account billing state. No price or prepaid spending guarantee is claimed.
-- The old `ah` command is unchanged. The independent command is `agent-entry`; migration
-  of the old terminal to depend on this package is a separate change.
+- 未执行 GitHub 仓库创建、托管 Actions 或 PyPI 发布。
+- 已配置 Linux CI，但本地验收在 macOS 上运行。Windows 不受支持。
+- 真实模型提供方测试使用 Chat Completions；在声明兼容 Responses 和其他厂商之前，需要分别完成真实端点验收。
+- 插件是可信的本地异步代码，并非沙箱。不配合取消的代码仍可能阻止进程退出。
+  清理超时不能证明外部工作已被撤销。
+- 摘要脱敏为尽力而为。检查点恢复历史用量快照，不恢复模型提供方账户的计费状态。
+  不提供价格或预付支出保障。
+- 旧 `ah` 命令保持不变。独立命令为 `agent-entry`；将旧终端迁移为依赖本包属于另一项变更。
 
-Raw local PTY evidence and execution receipts remain in the workspace's archived task
-record, outside this public repository. They are intentionally not bundled in distributions.
+原始本地 PTY 证据和执行回执保留在工作区归档任务记录中，位于本公开仓库之外，且按设计不会打包到发行产物中。
