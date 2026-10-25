@@ -2,7 +2,7 @@
 
 为现有项目提供主 Agent 终端入口。项目提供说明、异步工具和授权策略，CLI 负责对话、流式输出、上下文、取消、队列和用量。
 
-[官方页（本地预览）](index.html) · [完整中文说明](README.md) · [接入说明](docs/integration.md) · [架构与边界](docs/architecture.md)
+[官方主页](https://xsoway.github.io/agent-entry-cli/) · [离线预览](index.html) · [完整中文说明](README.md) · [接入说明](docs/integration.md) · [架构与边界](docs/architecture.md)
 
 ## 项目定位
 
@@ -31,7 +31,7 @@ export OPENAI_DEFAULT_MODEL='你的模型'
 uv run --locked agent-entry
 ```
 
-当前未声明存在远端 GitHub/PyPI 发布。从本地源码安装工具可运行 `uv tool install .`，不会覆盖原有 `ah` 命令。
+源码已在 [GitHub](https://github.com/xsoway/agent-entry-cli) 公开，尚未发布 GitHub Release 或 PyPI 包。从本地源码安装工具可运行 `uv tool install .`，不会覆盖原有 `ah` 命令。
 
 ⚠️ 凭据仅放环境变量，`.env` 和 `.agent-entry/` 已被 Git 忽略。CLI 不自动读取 `.env`。使用 `--init` 后要在 `agent-entry.toml` 中填写模型名；文件模型优先于环境回退，`--model` 优先于文件。
 
@@ -91,4 +91,4 @@ uv run --locked agent-entry --project examples/knowledge --plugin examples/knowl
 
 终端快捷键、执行阶段、实时上下文与错误处理见[终端操作手册](docs/terminal.md)。
 
-官方页的双语交互、本地验收与待部署状态见[发布说明](docs/releasing.md)。
+官方页的双语交互、本地／线上验收与部署状态见[发布说明](docs/releasing.md)。

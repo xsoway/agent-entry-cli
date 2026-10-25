@@ -16,11 +16,10 @@
 
 ## 漏洞报告入口
 
-维护账号为 [xsoway](https://github.com/xsoway)。当前目标仓库尚未创建，**尚无本项目可用的私密漏洞报告通道**，不能把此账号页面当成私信服务。
+项目已启用 GitHub Private Vulnerability Reporting。请使用[私密漏洞报告](https://github.com/xsoway/agent-entry-cli/security/advisories/new)提交安全问题，需要登录 GitHub；报告仅供维护者与获授权的协作者查看。
 
-仓库公开前，维护者需在 GitHub 启用并验证 Private Vulnerability Reporting，之后使用目标入口：
-`https://github.com/xsoway/agent-entry-cli/security/advisories/new`。
-该 URL 当前仅为发布配置目标，未声称已经可用；未验证该入口前，安全报告渠道门禁保持待完成。
+维护账号为 [xsoway](https://github.com/xsoway)。如果私密入口不可用，可通过[普通 Issue](https://github.com/xsoway/agent-entry-cli/issues) **仅请求建立私密联系渠道**，不要包含漏洞细节、有效凭据、原始对话、个人或业务数据。GitHub 账号页面不是私信服务，不应在公开讨论中提交秘密。
 
-在私密通道可用前，请勿提交敏感复现材料。仓库开放后可通过普通 Issue **仅请求建立私密联系渠道**，不要包含漏洞细节、有效凭据、原始对话、个人或业务数据。联系方式与私密通道可用性需在[发布检查](RELEASE_CHECKLIST.md)中记录。
+平台配置已通过 API 读回验证为启用，未发送测试漏洞报告。启用私密通道不等于对所有业务数据的保密保证；提交前仍需删去与复现无关的敏感内容。
+
 初期安全修复仅面向当前的 0.1.x 版本。

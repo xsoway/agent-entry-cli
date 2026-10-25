@@ -8,6 +8,8 @@ assert.ok(
     fs.existsSync(path.join(root, "index.html")),
     "official page must exist",
 );
+const siteUrl =
+    process.env.SITE_URL || pathToFileURL(path.join(root, "index.html")).href;
 const { chromium } = await import(
     process.env.PLAYWRIGHT_MODULE || "playwright-core"
 );
@@ -32,9 +34,10 @@ try {
     });
     const remote = [];
     page.on("request", (request) => {
-        if (/^https?:/.test(request.url())) remote.push(request.url());
+        if (/^https?:/.test(request.url()) && request.url() !== siteUrl)
+            remote.push(request.url());
     });
-    await page.goto(pathToFileURL(path.join(root, "index.html")).href);
+    await page.goto(siteUrl);
     assert.equal(await page.locator("html").getAttribute("lang"), "zh-CN");
     assert.match(await page.locator("h1").innerText(), /业务/);
     assert.equal(

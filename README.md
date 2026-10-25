@@ -10,7 +10,7 @@
 
 流式输出 · 上下文摘要 · 显式项目工具 · 安全会话控制
 
-[官方页（本地可打开）](index.html) · [中文快速入门](README.zh-CN.md) · [接入说明](docs/integration.md) · [架构与边界](docs/architecture.md)
+[官方主页](https://xsoway.github.io/agent-entry-cli/) · [离线预览](index.html) · [中文快速入门](README.zh-CN.md) · [接入说明](docs/integration.md) · [架构与边界](docs/architecture.md)
 
 </div>
 
@@ -168,14 +168,16 @@ flowchart TD
 首个后端使用 OpenAI Agents SDK 0.22.x，支持 Chat Completions 或 Responses API。
 请填写供应商实际使用的模型、端点和窗口设置；不保证自动兼容任意供应商。
 
-克隆仓库后执行：
+从公开源码安装：
 
 ```bash
+git clone https://github.com/xsoway/agent-entry-cli.git
+cd agent-entry-cli
 uv sync --locked --extra dev
 uv run --locked agent-entry --help
 ```
 
-当前未声明存在已发布的 PyPI 或 GitHub 版本。可将本地包安装为命令行工具：
+源码已在 GitHub 公开，尚未发布 PyPI 包或 GitHub Release。可将本地包安装为命令行工具：
 
 ```bash
 uv tool install .
@@ -360,7 +362,7 @@ CI 已配置 macOS/Linux；本地验收记录见 [docs/acceptance.md](docs/accep
 
 维护账号：[xsoway](https://github.com/xsoway)。贡献方式见 [CONTRIBUTING.md](CONTRIBUTING.md)，安全问题见 [SECURITY.md](SECURITY.md)。
 
-当前官方页可在本地打开；包元数据和工作流预配置的目标为 `xsoway/agent-entry-cli` 与 `https://xsoway.github.io/agent-entry-cli/`。**这些是待部署地址，尚未创建远程仓库或验证在线可访问性。** 不以包元数据中存在 URL 代表已发布。
+源码仓库：[xsoway/agent-entry-cli](https://github.com/xsoway/agent-entry-cli)。官方页：[Agent Entry CLI](https://xsoway.github.io/agent-entry-cli/)，也可在本地打开 `index.html`。已启用 GitHub 私密漏洞报告；仓库公开与页面上线不等于已发布 PyPI 包或 GitHub Release。
 
 [发布与官方页操作说明](docs/releasing.md)包含本地浏览器验收、干净检出门禁与 Pages 部署步骤；当前进度见 [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)。Pages 仅通过手动工作流发布，不会在普通代码推送时自动部署。
 

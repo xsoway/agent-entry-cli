@@ -1,11 +1,11 @@
 # 发布与官方页
 
-当前是本地发布准备版本。目标地址预配置为：
+当前源码仓库和官方页已经公开：
 
 - 仓库：`https://github.com/xsoway/agent-entry-cli`
 - Pages：`https://xsoway.github.io/agent-entry-cli/`
 
-目标仓库尚未创建，以上链接不代表已上线。中文文档为用户选择，不要求切换成英文主 README。
+仓库为公开仓库，默认分支 `main`，已启用私密漏洞报告。中文文档为用户选择，不要求切换成英文主 README；尚未发布 GitHub Release 或 PyPI 包。
 
 ## 本地查看
 
@@ -27,6 +27,8 @@ uv run --locked python -m http.server 8765 --bind 127.0.0.1
 npm install --prefix /tmp/agent-entry-browser --ignore-scripts --no-audit --no-fund playwright-core@1.58.2
 PLAYWRIGHT_MODULE=/tmp/agent-entry-browser/node_modules/playwright-core/index.mjs node scripts/verify_site.mjs
 ```
+
+通过 `SITE_URL=https://xsoway.github.io/agent-entry-cli/` 可对线上页面运行同一套行为检查；默认检查本地文件。
 
 需要已安装的 Chrome 或 Chromium。脚本自动探测常见安装位置；其他位置通过 `CHROME_PATH` 指定。检查桌面／768px／380px、双语、命令、目录、Tweaks、时钟、动效及系统减少动效，要求控制台无错误、无外部运行资源请求。
 
@@ -51,9 +53,9 @@ uv run --locked python scripts/check_release.py
 
 该脚本只覆盖常见模式，不是全面 DLP 或依赖漏洞审计。分发归档需另做内容检查。检查不包含本地 reflog、不可达对象或未提供附件，分享源代码请使用干净 clone／源码包，勿直接复制 `.git` 目录。
 
-## 托管前的操作
+## 后续部署或版本发布
 
-在用户明确授权公开发布后，再按实际仓库配置执行：
+首次仓库创建、推送和 Pages 部署已获用户授权并执行。后续操作仍应按实际发布范围授权；以下为可重复流程：
 
 1. 创建目标仓库并设置 remote。填写 About、与实际功能一致的 topics；不把未实现的 Skills／多 Agent 能力作为标签。
 2. 启用并验证 Private Vulnerability Reporting；将可用的私密入口记录到安全说明和发布检查。Discussions 与类别按需开启。
